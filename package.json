@@ -1,0 +1,25 @@
+{
+  "name": "ironpulse",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.2",
+  "scripts": {
+    "dev": "pnpm --filter @ironpulse/shared build && pnpm --parallel --filter api --filter web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm --filter @ironpulse/shared build && pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "backup": "node scripts/backup.cjs",
+    "db:migrate": "pnpm --filter api db:migrate",
+    "db:seed": "pnpm --filter api db:seed",
+    "db:studio": "pnpm --filter api db:studio",
+    "db:reset": "pnpm --filter api db:reset"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.0.0",
+    "prettier": "^3.4.1",
+    "typescript": "^5.7.2"
+  }
+}

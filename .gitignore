@@ -1,0 +1,18 @@
+node_modules/
+.next/
+dist/
+dist-cjs/
+.turbo/
+out/
+coverage/
+
+.env*
+!.env.example
+
+*.db
+*.db-journal
+
+apps/api/.dev-mails/
+
+# Backup output is written outside the repository at ../ironpulse-backups/.
+.DS_Store

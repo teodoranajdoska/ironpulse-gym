@@ -1,0 +1,82 @@
+{
+  "home": {
+    "title": "IronPulse",
+    "headline": "Gym membership, nutrition, coaching.",
+    "subtitle": "A premium training environment for strength, wellness, and discipline.",
+    "cta": "Get started",
+    "signIn": "Sign in",
+    "membership": "Membership",
+    "duration1": "1 month",
+    "duration2": "3 months",
+    "duration3": "6 months",
+    "duration4": "12 months"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "remember": "Remember me",
+    "recover": "Recover password"
+  },
+  "nav": {
+    "label": "Main navigation",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Log out"
+  },
+  "forms": {
+    "loginTitle": "Sign in",
+    "registerTitle": "Create your member account",
+    "verifyTitle": "Verify your email",
+    "resendTitle": "Resend verification email",
+    "forgotTitle": "Forgot password",
+    "resetTitle": "Set a new password",
+    "name": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "loginSubmit": "Sign in",
+    "registerSubmit": "Create account",
+    "verifySubmit": "Verify email",
+    "resendSubmit": "Resend email",
+    "forgotSubmit": "Send reset link",
+    "resetSubmit": "Update password",
+    "working": "Please wait…",
+    "validation": "Check the information and try again.",
+    "passwordMismatch": "The passwords do not match.",
+    "invalidOrExpired": "The credentials or link are invalid or expired.",
+    "requestFailed": "The request could not be completed. Please try again.",
+    "verificationReady": "Your verification link is ready.",
+    "verificationMissing": "Open the verification link from your email to continue.",
+    "registerSuccess": "Account created. Check your email for the verification link.",
+    "verifySuccess": "Email verified. You can now sign in.",
+    "resendSuccess": "If verification is needed, an email has been sent.",
+    "forgotSuccess": "If the account exists, a reset link has been sent.",
+    "resetSuccess": "Password updated. You can now sign in."
+  },
+  "links": {
+    "register": "Create account",
+    "login": "Already have an account? Sign in",
+    "forgot": "Forgot password?",
+    "resend": "Resend verification email",
+    "backHome": "Back to home"
+  },
+  "dashboard": {
+    "loading": "Loading your account…",
+    "memberTitle": "Member dashboard",
+    "trainerTitle": "Trainer dashboard",
+    "adminTitle": "Admin dashboard",
+    "sponsorTitle": "Sponsor dashboard",
+    "welcome": "Welcome, {name}.",
+    "role": "Account role: {role}",
+    "logout": "Log out"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "home": "Return home",
+    "unexpected": "Something went wrong",
+    "retry": "Try again"
+  }
+}
