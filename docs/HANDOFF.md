@@ -25,7 +25,7 @@ Copy-Item apps/api/.env.example apps/api/.env
 Copy-Item apps/web/.env.example apps/web/.env.local
 ```
 
-Set the same random `JWT_SECRET` value of at least 32 characters in both `.env` and `apps/api/.env`. The checked-in sample is for local development only. The SQLite URL in the API example creates `apps/api/prisma/dev.db`; no external database is required. SMTP and the Anthropic key can remain blank for local development.
+The checked-in JWT secret is for local development only. `WEB_URL` sets the origin used in verification and password-reset links. The SQLite URL in the API example creates `apps/api/prisma/dev.db`; no external database is required. SMTP and the Anthropic key can remain blank for local development.
 
 Then initialize and run the apps:
 
@@ -74,7 +74,7 @@ Follow the Swagger operation details for HTTP methods, request schemas, paginati
 - **Localization:** use next-intl message catalogs in `apps/web/messages/mk.json` and `apps/web/messages/en.json`; Macedonian (`mk`) is the default. Keep user-facing copy localized.
 - **Validation and types:** define request/response validation with Zod in `packages/shared` where it is shared; reuse those schemas in the API and web client. Keep TypeScript strict and avoid `any`.
 - **Design tokens:** use the Tailwind theme and CSS custom properties. The current brand accent is electric lime (`#b7ff39`) with a dark-first palette; extend the shared tokens rather than introducing unrelated colors or ad hoc styling.
-- **Animation:** preserve the design requirement to animate transforms and opacity only, clean up animation/scroll triggers on unmount, and provide a static fallback when `prefers-reduced-motion` is enabled. Do not add the planned scroll-scrubbed hero or rolling rules animation without implementing and testing reduced-motion behavior too. Those animations are not present in the current web source.
+- **Animation:** use photography-led, story-driven design in the style of modern premium gyms. Scroll animations enhance photos and content; the rolling weight plate is used only in the rules section. Animate transforms and opacity only, clean up animation/scroll triggers on unmount and route changes, and provide static fallbacks when `prefers-reduced-motion` is enabled.
 - **Security and API boundaries:** trust backend guards for authorization; frontend route protection is only a UX mirror. Never log passwords, tokens, or PII. Do not introduce real payment processing; use the mock provider.
 
 ## Current state and remaining work
@@ -86,7 +86,7 @@ Known limitations recorded in `PROGRESS.md`:
 - Replace the seeded machine exercise video IDs marked `TODO-replace` before publishing that content.
 - The scheduled daily membership-expiry query is covered by tests, but the scheduler was not observed firing at midnight.
 - Live Anthropic requests, production SMTP, production database deployment, and production TLS/cookie behavior have not been exercised. Without an Anthropic key, the fallback nutrition provider is used.
-- The scroll-driven hero/rules animations are not implemented.
+- The hero and rules motion should follow the current photography-led design direction; use `PROGRESS.md` for the Phase 3 verification status.
 - Local email output under `apps/api/.dev-mails/` and `/dev/last-email` are development-only.
 
 Use `PROGRESS.md` for the detailed verification history and additional environment/testing notes.

@@ -13,6 +13,7 @@ export const envSchema = z.object({
   SMTP_FROM: z.string().default('noreply@ironpulse.local'),
   DEV_MAIL_DIR: z.string().optional(),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  WEB_URL: z.string().url().optional(),
   WEB_APP_URL: z.string().url().default('http://localhost:3000'),
   APP_NAME: z.string().default(APP_NAME),
   ANTHROPIC_API_KEY: z.string().default(''),

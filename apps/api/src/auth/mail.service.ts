@@ -92,7 +92,10 @@ export class MailService {
   }
 
   private link(path: string, token: string): string {
-    const url = new URL(path, this.config.get('WEB_APP_URL'));
+    const url = new URL(
+      path,
+      this.config.get('WEB_URL') ?? this.config.get('WEB_APP_URL'),
+    );
     url.searchParams.set('token', token);
     return url.toString();
   }

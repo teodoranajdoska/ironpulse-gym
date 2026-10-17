@@ -8,6 +8,12 @@ IronPulse is a pnpm workspace for a gym platform. Payments are intentionally moc
 - `apps/api`: NestJS API, Prisma/SQLite, Argon2, cookie JWT sessions, RBAC, CSRF, throttling, local development mail, and Swagger.
 - `packages/shared`: shared Zod request and response schemas and role types.
 
+## Web imagery and design
+
+The public homepage uses a photography-led, dark-first design with a working light/dark toggle and Macedonian/English copy. Add locally licensed image files to `apps/web/public/images/`; filenames, localized alt text, aspect ratios, and focal points are listed in [docs/IMAGES.md](./docs/IMAGES.md). Missing files render designed placeholders. An optional `apps/web/public/video/hero.mp4` is only used when reduced motion and the browser's data-saver setting allow it.
+
+The homepage's scroll effects are progressively enhanced and disabled for reduced-motion preferences. Image slots and the optional video are local-only; do not substitute hotlinked image URLs.
+
 ## Local setup
 
 Requirements: Node.js 20+ and pnpm 9.
@@ -18,7 +24,7 @@ Requirements: Node.js 20+ and pnpm 9.
    pnpm install
    ```
 2. Copy `.env.example` to `.env`, `apps/api/.env.example` to `apps/api/.env`, and `apps/web/.env.example` to `apps/web/.env.local`.
-3. Set the same `JWT_SECRET` value (at least 32 characters) in root `.env` and `apps/api/.env`.
+3. The matching `JWT_SECRET` values in the examples are development-only. Keep them only for local development; use a private random secret of at least 32 characters in any shared or deployed environment.
 4. Create and seed the local SQLite database:
 
    ```powershell
@@ -49,7 +55,7 @@ For a later production SMTP setup, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `S
 - Password-reset links are hashed, one-hour, and single-use. Reset revokes all refresh sessions. Admin-created trainer/sponsor accounts receive a one-time set-password invitation.
 - All state-changing requests require the double-submit `csrf_token` cookie and `x-csrf-token` header. Call `GET /auth/csrf` to obtain the initial token.
 - JWT authentication is globally applied; `@Public()` opts out for public routes. `@Roles()` restrictions are checked against the current database user. Auth endpoints use stricter rate limits than the global API limit.
-- CORS origins come from `CORS_ORIGINS`; web API URL comes from `NEXT_PUBLIC_API_URL`; SMTP and invitation link settings are validated at startup.
+- CORS origins come from `CORS_ORIGINS`; the web API URL comes from `NEXT_PUBLIC_API_URL`; `WEB_URL` sets the origin for email links. Startup validation names missing or invalid variables and points to the relevant `.env.example`.
 - Nutrition uses `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` when configured. With no key, a deterministic local meal-plan provider is used. Meal-plan generation is limited to one successful plan per user per UTC day.
 
 ## Development seed accounts

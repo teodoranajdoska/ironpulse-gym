@@ -24,7 +24,27 @@ import { PrivacyModule } from './privacy/privacy.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validate: (config) => envSchema.parse(config),
+      validate: (config) => {
+        const result = envSchema.safeParse(config);
+        if (!result.success) {
+          const missing = result.error.issues
+            .filter((issue) => issue.code === 'invalid_type' && issue.received === 'undefined')
+            .map((issue) => issue.path.join('.'));
+          const invalid = result.error.issues
+            .filter((issue) => issue.code !== 'invalid_type' || issue.received !== 'undefined')
+            .map((issue) => `${issue.path.join('.')}: ${issue.message}`);
+          const details = [
+            missing.length > 0 ? `Missing required variables: ${missing.join(', ')}.` : '',
+            invalid.length > 0 ? `Invalid variables: ${invalid.join('; ')}.` : '',
+          ].filter(Boolean).join(' ');
+
+          throw new Error(
+            `Environment validation failed. ${details} Hint: copy .env.example to .env.`,
+          );
+        }
+
+        return result.data;
+      },
     }),
     ThrottlerModule.forRoot([
       {

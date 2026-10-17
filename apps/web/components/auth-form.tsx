@@ -96,8 +96,8 @@ export function AuthForm({ kind }: { kind: AuthFormKind }): JSX.Element {
 
   const titleKey = `${kind}Title` as const;
   return (
-    <form className="space-y-4" onSubmit={(event) => void submit(event)} noValidate>
-      <h1 className="text-2xl font-bold">{t(titleKey)}</h1>
+    <form className="space-y-5" onSubmit={(event) => void submit(event)} noValidate>
+      <h1 className="display-font text-4xl font-bold leading-none tracking-tightest text-foreground">{t(titleKey)}</h1>
       {kind === 'register' && (
         <Field label={t('name')} value={name} onChange={setName} autoComplete="name" />
       )}
@@ -129,12 +129,12 @@ export function AuthForm({ kind }: { kind: AuthFormKind }): JSX.Element {
         />
       )}
       {kind === 'verify' && (
-        <p className="text-sm text-slate-300">
+        <p className="text-sm leading-relaxed text-muted">
           {searchParams.get('token') ? t('verificationReady') : t('verificationMissing')}
         </p>
       )}
-      {error && <p aria-live="assertive" className="text-sm text-red-400">{error}</p>}
-      {notice && <p aria-live="polite" className="text-sm text-brand-lime">{notice}</p>}
+      {error && <p aria-live="assertive" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">{error}</p>}
+      {notice && <p aria-live="polite" className="rounded-xl border border-brand-lime/30 bg-brand-lime/10 px-4 py-3 text-sm text-brand-lime">{notice}</p>}
       <Button className="w-full" type="submit" disabled={busy || (kind === 'verify' && !searchParams.get('token'))}>
         {busy ? t('working') : t(`${kind}Submit` as const)}
       </Button>
@@ -158,7 +158,7 @@ function Field({
   const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   return (
     <div>
-      <label className="mb-2 block text-sm text-slate-300" htmlFor={id}>{label}</label>
+      <label className="mb-2 block text-sm font-medium text-muted" htmlFor={id}>{label}</label>
       <Input
         autoComplete={autoComplete}
         id={id}

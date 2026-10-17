@@ -89,3 +89,32 @@ Status is based on commands and smoke tests actually run in this environment.
 - `pnpm dev` requires the documented environment values (for example, copy the root and app `.env.example` files); no local `.env` files were present during this run, so smoke testing supplied the local development values directly.
 - The live member smoke test generated one plan for the seeded first member and consumed that member's one-plan-per-UTC-day quota; this is a development database change, not part of the seed.
 - Production SMTP, external Anthropic availability, and production database deployment were not exercised.
+
+## Phase 3 redesign (part 1)
+
+| Area | Status | Verification |
+|---|---|---|
+| Remove the previous hero direction | DONE | Deleted the old hero component/configuration and removed its references from code, docs, tests, and Copilot instructions; targeted repository search found no remaining old-direction matches. |
+| Brand foundation and shell | DONE | Added the photography-led design system, display/body fonts, dark/light CSS tokens, responsive navigation, footer, cookie banner, auth panel, and role-dashboard styling. Fixed utility-class conflicts found during a 390px viewport check; mobile navigation now fits, opens, and closes with Escape. |
+| Local image system | DONE / PARTIAL | Added all 14 localized manifest slots, `GymImage` fallback, server-side file availability checks, optional video gating, and `docs/IMAGES.md`. Downloaded 10 Pexels-licensed local gym images and documented their sources. PARTIAL because portraits for all three trainers, a nutrition image, and hero video are not supplied. |
+| Home experience | DONE | Built the ordered story sections, API-backed plans/machines/trainers/sponsors/settings, photo-backed training zones and machine cards, marked placeholder testimonials, and trial form. Browser confirmed all 6 machine-card photos and the zone-gallery photos loaded successfully. |
+| Motion, locale, and theme | DONE / PARTIAL | Fixed the pinned gallery failure: the route-transition wrapper retained a `transform`, making ScrollTrigger's fixed pin relative to the entire page instead of the viewport. The route transition is now opacity-only; the desktop gallery pins correctly and its cards stay visible through the horizontal scrub without document overflow. Mobile keeps native horizontal snap scrolling. Locale/theme controls and reduced-motion state were checked. PARTIAL because every other section has not been manually checked at every width and motion mode. |
+| Auth pages, error pages, and dashboards | DONE / PARTIAL | Smoke-checked login, register, verify-email, forgot/reset password, and 404 routes. The current browser session is a member; non-member role routes were correctly redirected to `/member`, so trainer/admin/sponsor dashboard layouts were not visually inspected under their respective accounts. |
+| Membership pricing helpers | DONE | Added monthly-price and savings calculations with 9 focused Vitest cases; the pricing cards are populated from the API. |
+| Documentation and remaining content | DONE / PARTIAL | Added image sourcing guidance and updated README/HANDOFF. Legal pages are starter copy and need legal review; testimonial text and trust-row community numbers are explicit placeholders for replacement. |
+| Workspace checks | DONE | `pnpm --filter web lint`, `pnpm --filter web typecheck`, `pnpm --filter web test` (13 tests), and `pnpm --filter web build` pass after the gallery fix; all 10 downloaded local photos passed JPEG signature checks. |
+| Browser verification | PARTIAL | Checked live API card counts, loaded zone and machine photos, desktop pin at multiple scroll positions with no horizontal document overflow, and mobile snap layout with no overflow. Language/theme switching, reduced-motion preference, mobile navigation, auth routes, and role protection were also checked. Not every homepage section was inspected in every combination; remaining local slots and each role's authenticated dashboard still need review. |
+
+### Phase 3 remaining verification
+
+- Add the remaining local photos from `docs/IMAGES.md` (and optionally `public/video/hero.mp4`), then inspect all 14 slots, focal points, video fallback, and overlays.
+- Manually scroll every home section at desktop and mobile widths in both languages and themes, including with `prefers-reduced-motion` enabled.
+- Sign in as each role and visually inspect its dashboard/sidebar; submit the free-trial form once for both success and API-error states.
+- Review privacy/terms copy with the appropriate legal owner and replace the explicitly marked testimonial and community-number placeholders before publishing.
+
+## Workspace relocation / environment recovery
+
+- Reproduced the startup error with no local `.env` files: Zod reported missing `DATABASE_URL` and `JWT_SECRET`.
+- Added safe local defaults and the API port, web URL, SMTP, mail, CORS, and client URL variables to the environment examples; startup validation now names missing/invalid keys and suggests copying `.env.example`.
+- Removed workspace `node_modules`, reinstalled with `pnpm install`, applied migrations, and seeded successfully from the moved `C:\Users\anton\Projects\MuscleBoost` path.
+- Verified API lint, typecheck, build, and all 31 API tests; `/health` and the web home returned HTTP 200. Browser smoke check showed 2 trainer cards, 6 machine cards, and 4 membership plans loaded from the API.

@@ -43,7 +43,7 @@ Questionnaire -> backend computes BMR/TDEE/macros (Mifflin-St Jeor) -> LLM gener
 
 ## Design & animation
 Modern, elegant, dark-first theme with one electric accent color (electric lime), large typography, generous spacing, light/dark toggle. Scroll animations where sensible, ALWAYS respecting `prefers-reduced-motion` with static fallbacks.
-- Hero: SVG athlete silhouette doing a deadlift, scrubbed by scroll (GSAP ScrollTrigger `scrub`), up and down in sync with scroll.
+- Photography-led, story-driven design in the style of modern premium gyms. Scroll animations enhance photos and content. The rolling weight plate is used ONLY in the rules section.
 - Rules section: a weight plate rolls horizontally as the user scrolls; each rule reveals as the plate passes it.
 - Clean up all ScrollTriggers on unmount. Animate transforms/opacity only.
 
