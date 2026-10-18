@@ -9,6 +9,7 @@
     "typecheck": "pnpm --filter @ironpulse/shared build && pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
+    "check:i18n": "node scripts/check-i18n.cjs",
     "backup": "node scripts/backup.cjs",
     "db:migrate": "pnpm --filter api db:migrate",
     "db:seed": "pnpm --filter api db:seed",

@@ -87,6 +87,7 @@ export class AdminService {
       revenue,
       pendingPayments,
       newMemberRows,
+      confirmedPayments,
       exercisePopularity,
     ] = await Promise.all([
       this.prisma.user.count({ where: { role: 'MEMBER', status: { not: 'DELETED' } } }),
@@ -114,6 +115,14 @@ export class AdminService {
           createdAt: { gte: historyStart, lt: nextMonthStart },
         },
         select: { createdAt: true },
+      }),
+      this.prisma.paymentRecord.findMany({
+        where: {
+          provider: 'mock',
+          status: 'CONFIRMED',
+          confirmedAt: { gte: historyStart, lt: nextMonthStart },
+        },
+        select: { amountMkd: true, confirmedAt: true },
       }),
       this.prisma.workoutLog.groupBy({
         by: ['exerciseId'],
@@ -146,13 +155,23 @@ export class AdminService {
       }
     }
     const monthCounts = new Map<string, number>();
+    const monthRevenue = new Map<string, number>();
     for (let index = 0; index < 12; index += 1) {
       const month = new Date(Date.UTC(historyStart.getUTCFullYear(), historyStart.getUTCMonth() + index, 1));
-      monthCounts.set(month.toISOString().slice(0, 7), 0);
+      const key = month.toISOString().slice(0, 7);
+      monthCounts.set(key, 0);
+      monthRevenue.set(key, 0);
     }
     for (const row of newMemberRows) {
       const key = row.createdAt.toISOString().slice(0, 7);
       monthCounts.set(key, (monthCounts.get(key) ?? 0) + 1);
+    }
+    for (const payment of confirmedPayments) {
+      if (!payment.confirmedAt) continue;
+      const key = payment.confirmedAt.toISOString().slice(0, 7);
+      if (monthRevenue.has(key)) {
+        monthRevenue.set(key, (monthRevenue.get(key) ?? 0) + payment.amountMkd);
+      }
     }
     return {
       members: memberCount,
@@ -160,6 +179,7 @@ export class AdminService {
       monthlyRevenueMkd: revenue._sum.amountMkd ?? 0,
       pendingPayments,
       newMembersPerMonth: [...monthCounts].map(([month, count]) => ({ month, count })),
+      revenuePerMonth: [...monthRevenue].map(([month, amountMkd]) => ({ month, amountMkd })),
       popularMachines: [...popularCounts.values()]
         .sort((left, right) => right.workouts - left.workouts)
         .slice(0, 10),

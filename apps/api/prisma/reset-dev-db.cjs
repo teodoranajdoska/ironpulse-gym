@@ -6,6 +6,10 @@ const apiDirectory = path.resolve(__dirname, '..');
 const databasePath = path.join(__dirname, 'dev.db');
 const packageManager = 'pnpm';
 
+if (process.env.NODE_ENV === 'production') {
+  throw new Error('Refusing to reset the database when NODE_ENV=production.');
+}
+
 function run(args) {
   const result =
     process.platform === 'win32'

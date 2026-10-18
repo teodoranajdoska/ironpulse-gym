@@ -1,9 +1,15 @@
 import { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import { existsSync } from 'node:fs';
 import request from 'supertest';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { AuthController } from '../src/auth/auth.controller';
+import { AuthService } from '../src/auth/auth.service';
+import { MailService } from '../src/auth/mail.service';
+import { Env } from '../src/config/env';
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
@@ -14,6 +20,7 @@ describe('Auth lifecycle (SQLite)', () => {
   let verificationToken = '';
   let csrfToken = '';
   const email = `auth-e2e-${Date.now()}@example.test`;
+  const optionalEmail = `auth-optional-e2e-${Date.now()}@example.test`;
 
   beforeAll(async () => {
     if (!testDatabaseUrl) {
@@ -21,6 +28,7 @@ describe('Auth lifecycle (SQLite)', () => {
     }
     process.env.DATABASE_URL = testDatabaseUrl;
     process.env.JWT_SECRET = 'e2e-test-secret-with-at-least-32-characters';
+    process.env.EMAIL_VERIFICATION_REQUIRED = 'true';
     const { AppModule } = await import('../src/app.module');
     const testingModule = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = testingModule.createNestApplication();
@@ -31,8 +39,8 @@ describe('Auth lifecycle (SQLite)', () => {
   });
 
   afterAll(async () => {
-    if (prisma && email) {
-      await prisma.user.deleteMany({ where: { email } });
+    if (prisma) {
+      await prisma.user.deleteMany({ where: { email: { in: [email, optionalEmail] } } });
     }
     await app?.close();
   });
@@ -113,6 +121,59 @@ describe('Auth lifecycle (SQLite)', () => {
       .expect(401);
   });
 
+  test('registers and issues a session immediately when verification is optional', async () => {
+    const optionalConfig = new ConfigService<Env, true>();
+    optionalConfig.set('EMAIL_VERIFICATION_REQUIRED', false);
+    optionalConfig.set('JWT_SECRET', 'e2e-test-secret-with-at-least-32-characters');
+    optionalConfig.set('NODE_ENV', 'test');
+    const optionalService = new AuthService(
+      prisma,
+      app.get(JwtService),
+      optionalConfig,
+      app.get(MailService),
+    );
+    const optionalModule = await Test.createTestingModule({
+      controllers: [AuthController],
+      providers: [
+        { provide: AuthService, useValue: optionalService },
+        { provide: ConfigService, useValue: optionalConfig },
+      ],
+    }).compile();
+    const optionalApp = optionalModule.createNestApplication();
+    optionalApp.use(cookieParser());
+    await optionalApp.init();
+    try {
+      const optionalAgent = request.agent(optionalApp.getHttpServer());
+      const csrf = await optionalAgent.get('/auth/csrf').expect(200);
+      const token = csrf.body.csrfToken as string;
+      const response = await optionalAgent
+        .post('/auth/register')
+        .set('x-csrf-token', token)
+        .send({ email: optionalEmail, password: 'strong-password-123', name: 'Optional Member' })
+        .expect(201);
+
+      expect(response.body.user.email).toBe(optionalEmail);
+      expect(response.headers['set-cookie']).toBeDefined();
+      const record = await prisma.user.findUniqueOrThrow({
+        where: { email: optionalEmail },
+        select: { emailVerifiedAt: true, status: true, emailTokens: { select: { id: true } } },
+      });
+      expect(record.emailVerifiedAt).toBeInstanceOf(Date);
+      expect(record.status).toBe('ACTIVE');
+      expect(record.emailTokens).toHaveLength(0);
+      await prisma.user.update({ where: { email: optionalEmail }, data: { emailVerifiedAt: null } });
+      const login = await optionalAgent
+        .post('/auth/login')
+        .set('x-csrf-token', token)
+        .send({ email: optionalEmail, password: 'strong-password-123' })
+        .expect(200);
+      expect(login.body.user.email).toBe(optionalEmail);
+      expect(login.headers['set-cookie']).toBeDefined();
+    } finally {
+      await optionalApp.close();
+    }
+  });
+
   test('allows a seeded admin to log in and preserves the admin role', async () => {
     const adminAgent = request.agent(app.getHttpServer());
     const csrf = await adminAgent.get('/auth/csrf').expect(200);
@@ -120,11 +181,11 @@ describe('Auth lifecycle (SQLite)', () => {
     const login = await adminAgent
       .post('/auth/login')
       .set('x-csrf-token', adminCsrf)
-      .send({ email: 'admin@ironpulse.local', password: 'password123' })
+      .send({ email: 'admin@ironpulse.test', password: 'password123' })
       .expect(200);
     expect(login.body.user.role).toBe('ADMIN');
     const currentUser = await adminAgent.get('/auth/me').expect(200);
-    expect(currentUser.body.user.email).toBe('admin@ironpulse.local');
+    expect(currentUser.body.user.email).toBe('admin@ironpulse.test');
     expect(currentUser.body.user.role).toBe('ADMIN');
   });
 
@@ -161,19 +222,13 @@ describe('Auth lifecycle (SQLite)', () => {
   });
 
   test('requests a membership and activates it after admin payment confirmation', async () => {
-    const memberRecord = await prisma.user.findUniqueOrThrow({
-      where: { email: 'member5@ironpulse.local' },
-      select: { id: true },
-    });
-    await prisma.membership.deleteMany({ where: { userId: memberRecord.id } });
-
     const member = request.agent(app.getHttpServer());
     const memberCsrf = await member.get('/auth/csrf').expect(200);
     const memberToken = memberCsrf.body.csrfToken as string;
     await member
       .post('/auth/login')
       .set('x-csrf-token', memberToken)
-      .send({ email: 'member5@ironpulse.local', password: 'password123' })
+      .send({ email, password: 'strong-password-123' })
       .expect(200);
     const pending = await member
       .post('/memberships/request')
@@ -188,7 +243,7 @@ describe('Auth lifecycle (SQLite)', () => {
     await admin
       .post('/auth/login')
       .set('x-csrf-token', adminCsrf.body.csrfToken as string)
-      .send({ email: 'admin@ironpulse.local', password: 'password123' })
+      .send({ email: 'admin@ironpulse.test', password: 'password123' })
       .expect(200);
     const confirmed = await admin
       .post(`/memberships/admin/${pending.body.id}/confirm`)

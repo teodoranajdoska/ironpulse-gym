@@ -3,15 +3,141 @@
 import { ArrowUpRight, LayoutDashboard, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
+import { z } from 'zod';
 import { UserRole } from '@ironpulse/shared';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ApiError, apiGet } from '@/lib/api-client';
 
 type NavEntry = { slug: string; key: string };
+type DashboardCard = { label: string; value: string; detail: string };
+type DashboardRow = { title: string; detail: string; status?: string };
+type DashboardChart = { title: string; points: Array<{ label: string; value: number }> };
+type DashboardData = {
+  cards: DashboardCard[];
+  listTitle: string;
+  rows: DashboardRow[];
+  charts?: DashboardChart[];
+};
+
+const membershipSchema = z.object({
+  membership: z.object({
+    status: z.string(),
+    endsAt: z.coerce.date().nullable(),
+    plan: z.object({ name: z.string(), durationMonths: z.number() }),
+  }).nullable(),
+  daysRemaining: z.number(),
+});
+const workoutsSchema = z.object({
+  data: z.array(z.object({
+    performedAt: z.coerce.date(),
+    exercise: z.object({ name: z.string() }),
+    sets: z.array(z.object({ reps: z.number(), weightKg: z.number() })),
+  })),
+  pagination: z.object({ total: z.number() }).passthrough(),
+}).passthrough();
+const nutritionSchema = z.object({
+  data: z.array(z.object({
+    id: z.string(),
+    status: z.string(),
+    source: z.string(),
+    createdAt: z.coerce.date(),
+  })),
+  pagination: z.object({ total: z.number() }).passthrough(),
+}).passthrough();
+const memberAppointmentsSchema = z.object({
+  data: z.array(z.object({
+    id: z.string(),
+    startsAt: z.coerce.date(),
+    status: z.string(),
+    trainerName: z.string().nullable(),
+  })),
+  pagination: z.object({ total: z.number() }).passthrough(),
+}).passthrough();
+const trainerClientsSchema = z.object({
+  data: z.array(z.object({ id: z.string(), name: z.string().nullable(), email: z.string() })),
+  pagination: z.object({ total: z.number() }).passthrough(),
+}).passthrough();
+const trainerAppointmentsSchema = z.object({
+  data: z.array(z.object({
+    id: z.string(),
+    startsAt: z.coerce.date(),
+    status: z.string(),
+    member: z.object({ id: z.string(), name: z.string().nullable() }),
+  })),
+  pagination: z.object({ total: z.number() }).passthrough(),
+}).passthrough();
+const adminDashboardSchema = z.object({
+  members: z.number(),
+  activeMemberships: z.number(),
+  monthlyRevenueMkd: z.number(),
+  pendingPayments: z.number(),
+  newMembersPerMonth: z.array(z.object({ month: z.string(), count: z.number() })),
+  revenuePerMonth: z.array(z.object({ month: z.string(), amountMkd: z.number() })),
+  popularMachines: z.array(z.object({ slug: z.string(), name: z.string(), workouts: z.number() })),
+});
+const pendingPaymentsSchema = z.object({
+  data: z.array(z.object({
+    id: z.string(),
+    plan: z.object({ name: z.string(), priceMkd: z.number() }),
+    user: z.object({ profile: z.object({ name: z.string().nullable() }).nullable() }).nullable(),
+  })),
+  pagination: z.object({ total: z.number() }).passthrough(),
+}).passthrough();
+const trialRequestsSchema = z.object({
+  data: z.array(z.object({ id: z.string(), name: z.string(), status: z.string() })),
+  pagination: z.object({ total: z.number() }).passthrough(),
+}).passthrough();
+const auditLogSchema = z.object({
+  data: z.array(z.object({ id: z.string(), action: z.string(), createdAt: z.coerce.date() })),
+  pagination: z.object({ total: z.number() }).passthrough(),
+}).passthrough();
+const sponsorSchema = z.object({
+  companyName: z.string(),
+  offers: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    validUntil: z.coerce.date().nullable(),
+  })),
+}).passthrough();
+const sponsorStatsSchema = z.object({
+  impressions: z.number(),
+  clicks: z.number(),
+  daily: z.array(z.object({ day: z.string(), impressions: z.number(), clicks: z.number() })),
+});
+
+type DashboardTranslate = ReturnType<typeof useTranslations<'dashboard'>>;
+
+function statusLabel(status: string, t: DashboardTranslate): string {
+  switch (status) {
+    case 'ACTIVE': return t('statusActive');
+    case 'PENDING': return t('statusPending');
+    case 'EXPIRED': return t('statusExpired');
+    case 'REQUESTED': return t('statusRequested');
+    case 'CONFIRMED': return t('statusConfirmed');
+    case 'CANCELLED': return t('statusCancelled');
+    case 'COMPLETED': return t('statusCompleted');
+    case 'APPROVED': return t('statusApproved');
+    case 'DRAFT': return t('statusDraft');
+    case 'NEW': return t('statusNew');
+    case 'CONTACTED': return t('statusContacted');
+    case 'CONVERTED': return t('statusConverted');
+    default: return t('statusOther');
+  }
+}
+
+function displayDate(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale === 'mk' ? 'mk-MK' : 'en-GB', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
 
 const roleNavigation: Record<UserRole, NavEntry[]> = {
   MEMBER: [
@@ -52,6 +178,24 @@ export function RoleDashboard({ role }: { role: UserRole }): JSX.Element {
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileNavButton = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileNavOpen(false);
+        mobileNavButton.current?.focus();
+      }
+    };
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [mobileNavOpen]);
 
   if (loading || !user) {
     return <main className="page-width min-h-[60vh] py-16" aria-live="polite">{t('loading')}</main>;
@@ -71,24 +215,40 @@ export function RoleDashboard({ role }: { role: UserRole }): JSX.Element {
         </div>
         <button
           aria-expanded={mobileNavOpen}
+          aria-controls="role-dashboard-navigation"
           aria-label={t('menu')}
           className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-surface"
           onClick={() => setMobileNavOpen(!mobileNavOpen)}
+          ref={mobileNavButton}
           type="button"
         >
           {mobileNavOpen ? <X aria-hidden="true" size={19} /> : <Menu aria-hidden="true" size={19} />}
         </button>
       </div>
       <div className="grid gap-7 lg:grid-cols-[250px_minmax(0,1fr)]">
-        <aside className={`${mobileNavOpen ? 'block' : 'hidden'} rounded-panel border border-line bg-surface p-4 lg:block`}>
-          <div className="mb-5 flex items-center gap-3 border-b border-line px-2 pb-5">
+        <aside
+          aria-labelledby="role-dashboard-navigation-title"
+          aria-modal={mobileNavOpen ? true : undefined}
+          className={`${mobileNavOpen ? 'fixed inset-0 z-50 min-h-[100dvh] overflow-y-auto rounded-none bg-background px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] lg:static lg:min-h-0 lg:overflow-visible lg:rounded-panel lg:bg-surface lg:p-4' : 'hidden rounded-panel border border-line bg-surface p-4 lg:block'}`}
+          id="role-dashboard-navigation"
+          role="dialog"
+        >
+          <div className="mb-5 flex items-center justify-between gap-3 border-b border-line px-2 pb-5">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-lime/10 text-brand-lime">
               <LayoutDashboard aria-hidden="true" size={19} />
             </span>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-semibold text-foreground">{title}</p>
               <p className="text-xs uppercase tracking-widest text-muted">{roleLabel}</p>
             </div>
+            <button
+              aria-label={t('closeMenu')}
+              className="grid h-11 w-11 place-items-center rounded-xl border border-line text-foreground lg:hidden"
+              onClick={() => setMobileNavOpen(false)}
+              type="button"
+            >
+              <X aria-hidden="true" size={19} />
+            </button>
           </div>
           <nav aria-label={t('navigation')} className="space-y-1">
             {roleNavigation[role].map((entry) => {
@@ -117,7 +277,7 @@ export function RoleDashboard({ role }: { role: UserRole }): JSX.Element {
           <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
             <div>
               <Badge className="border-brand-lime/30 text-brand-lime">{roleLabel}</Badge>
-              <h1 className="display-font mt-4 text-5xl font-bold leading-none tracking-tightest text-foreground md:text-6xl">
+              <h1 className="display-font mt-4 break-words text-[clamp(2.25rem,7vw,3.75rem)] font-bold leading-none tracking-tightest text-foreground">
                 {title}
               </h1>
               <p className="mt-3 text-muted">{t('welcomeBack', { name })}</p>
@@ -126,13 +286,309 @@ export function RoleDashboard({ role }: { role: UserRole }): JSX.Element {
               {t('homeLink')}<ArrowUpRight aria-hidden="true" size={16} />
             </Link>
           </div>
-          <div className="rounded-panel border border-line bg-surface p-6 md:p-9">
-            <h2 className="text-lg font-semibold text-foreground">{t('overview')}</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{t('overviewDescription')}</p>
-          </div>
+          <DashboardOverview role={role} />
         </section>
       </div>
     </main>
+  );
+}
+
+function DashboardOverview({ role }: { role: UserRole }): JSX.Element {
+  const t = useTranslations('dashboard');
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [failed, setFailed] = useState(false);
+  const locale = typeof document === 'undefined' ? 'mk' : document.documentElement.lang;
+
+  useEffect(() => {
+    let active = true;
+    async function load(): Promise<void> {
+      try {
+        let summary: DashboardData;
+        if (role === 'MEMBER') {
+          const [membership, workouts, nutrition, appointments] = await Promise.all([
+            apiGet('/memberships/me', membershipSchema),
+            apiGet(`/workouts?page=1&pageSize=100&locale=${locale === 'mk' ? 'mk' : 'en'}`, workoutsSchema),
+            apiGet('/nutrition/plans?page=1&pageSize=10', nutritionSchema),
+            apiGet('/appointments/me?page=1&pageSize=20', memberAppointmentsSchema),
+          ]);
+          const nextAppointment = appointments.data
+            .filter((item) => item.startsAt >= new Date() && item.status !== 'CANCELLED')
+            .sort((first, second) => first.startsAt.getTime() - second.startsAt.getTime())[0];
+          const latestPlan = nutrition.data[0];
+          const lastWorkout = workouts.data[0];
+          summary = {
+            cards: [
+              {
+                label: t('memberMembership'),
+                value: membership.membership?.plan.name ?? t('noMembership'),
+                detail: membership.membership
+                  ? t('daysRemaining', { days: membership.daysRemaining })
+                  : t('membershipRequestPrompt'),
+              },
+              {
+                label: t('memberWorkouts'),
+                value: String(workouts.pagination.total),
+                detail: t('workoutSessionsSaved'),
+              },
+              {
+                label: t('memberNutrition'),
+                value: String(nutrition.pagination.total),
+                detail: latestPlan ? statusLabel(latestPlan.status, t) : t('noPlanYet'),
+              },
+              {
+                label: t('upcomingAppointments'),
+                value: nextAppointment ? displayDate(nextAppointment.startsAt, locale) : '—',
+                detail: nextAppointment?.trainerName ?? t('noUpcomingAppointment'),
+              },
+            ],
+            listTitle: t('recentActivity'),
+            rows: [
+              ...(nextAppointment
+                ? [{
+                    title: nextAppointment.trainerName ?? t('trainerAppointment'),
+                    detail: displayDate(nextAppointment.startsAt, locale),
+                    status: statusLabel(nextAppointment.status, t),
+                  }]
+                : []),
+              ...(lastWorkout
+                ? [{
+                    title: lastWorkout.exercise.name,
+                    detail: displayDate(lastWorkout.performedAt, locale),
+                    status: t('workoutSets', { count: lastWorkout.sets.length }),
+                  }]
+                : []),
+              ...(latestPlan
+                ? [{
+                    title: t('memberNutrition'),
+                    detail: displayDate(latestPlan.createdAt, locale),
+                    status: statusLabel(latestPlan.status, t),
+                  }]
+                : []),
+            ],
+          };
+        } else if (role === 'TRAINER') {
+          const [clients, appointments] = await Promise.all([
+            apiGet('/trainers/me/clients?page=1&pageSize=20', trainerClientsSchema),
+            apiGet('/appointments/trainer?page=1&pageSize=100', trainerAppointmentsSchema),
+          ]);
+          const now = new Date();
+          const todayAppointments = appointments.data.filter((item) =>
+            item.startsAt.getFullYear() === now.getFullYear() &&
+            item.startsAt.getMonth() === now.getMonth() &&
+            item.startsAt.getDate() === now.getDate() &&
+            item.status !== 'CANCELLED',
+          );
+          const pendingCount = appointments.data.filter((item) => item.status === 'REQUESTED').length;
+          const upcoming = appointments.data
+            .filter((item) => item.startsAt >= now && item.status !== 'CANCELLED')
+            .sort((first, second) => first.startsAt.getTime() - second.startsAt.getTime())
+            .slice(0, 5);
+          summary = {
+            cards: [
+              { label: t('trainerClients'), value: String(clients.pagination.total), detail: t('assignedClients') },
+              { label: t('todayAppointments'), value: String(todayAppointments.length), detail: t('appointmentsToday') },
+              { label: t('pendingRequests'), value: String(pendingCount), detail: t('awaitingConfirmation') },
+              {
+                label: t('trainerAppointments'),
+                value: String(appointments.pagination.total),
+                detail: t('appointmentsScheduled'),
+              },
+            ],
+            listTitle: t('upcomingAppointments'),
+            rows: [
+              ...upcoming.map((item) => ({
+                title: item.member.name ?? t('memberAccount'),
+                detail: displayDate(item.startsAt, locale),
+                status: statusLabel(item.status, t),
+              })),
+              ...clients.data.slice(0, Math.max(0, 5 - upcoming.length)).map((client) => ({
+                title: client.name ?? client.email,
+                detail: client.email,
+                status: t('assignedClient'),
+              })),
+            ],
+          };
+        } else if (role === 'ADMIN') {
+          const [dashboard, pending, trials, audit] = await Promise.all([
+            apiGet('/admin/dashboard', adminDashboardSchema),
+            apiGet('/memberships/admin/pending?page=1&pageSize=10', pendingPaymentsSchema),
+            apiGet('/content/admin/trial-requests?page=1&pageSize=10', trialRequestsSchema),
+            apiGet('/admin/audit-log?page=1&pageSize=5', auditLogSchema),
+          ]);
+          summary = {
+            cards: [
+              { label: t('memberAccounts'), value: String(dashboard.members), detail: t('registeredMembers') },
+              { label: t('activeMemberships'), value: String(dashboard.activeMemberships), detail: t('currentlyActive') },
+              {
+                label: t('monthlyRevenue'),
+                value: `${new Intl.NumberFormat(locale === 'mk' ? 'mk-MK' : 'en-GB').format(dashboard.monthlyRevenueMkd)} MKD`,
+                detail: t('confirmedPayments'),
+              },
+              { label: t('pendingPayments'), value: String(dashboard.pendingPayments), detail: t('needsReview') },
+            ],
+            listTitle: t('adminQueues'),
+            rows: [
+              ...pending.data.slice(0, 3).map((payment) => ({
+                title: payment.user?.profile?.name ?? t('memberAccount'),
+                detail: `${payment.plan.name} · ${payment.plan.priceMkd} MKD`,
+                status: t('statusPending'),
+              })),
+              ...trials.data.slice(0, 2).map((request) => ({
+                title: request.name,
+                detail: t('freeTrialRequest'),
+                status: statusLabel(request.status, t),
+              })),
+              ...audit.data.slice(0, 2).map((entry) => ({
+                title: entry.action,
+                detail: displayDate(entry.createdAt, locale),
+                status: t('auditEntry'),
+              })),
+              ...dashboard.popularMachines.slice(0, 2).map((machine) => ({
+                title: machine.name,
+                detail: t('machineWorkoutCount', { count: machine.workouts }),
+                status: t('popularMachine'),
+              })),
+            ],
+            charts: [
+              {
+                title: t('newMembersTrend'),
+                points: dashboard.newMembersPerMonth.map((point) => ({
+                  label: point.month,
+                  value: point.count,
+                })),
+              },
+              {
+                title: t('monthlyPaymentRevenue'),
+                points: dashboard.revenuePerMonth.map((point) => ({
+                  label: point.month,
+                  value: point.amountMkd,
+                })),
+              },
+            ],
+          };
+        } else {
+          const [sponsor, stats] = await Promise.all([
+            apiGet('/sponsors/me', sponsorSchema),
+            apiGet('/sponsors/me/stats', sponsorStatsSchema),
+          ]);
+          const activeOffers = sponsor.offers.filter((offer) =>
+            offer.validUntil === null || offer.validUntil >= new Date(),
+          );
+          summary = {
+            cards: [
+              { label: t('sponsorOffers'), value: String(activeOffers.length), detail: t('activeOffers') },
+              {
+                label: t('sponsorImpressions'),
+                value: new Intl.NumberFormat(locale === 'mk' ? 'mk-MK' : 'en-GB').format(stats.impressions),
+                detail: t('last30Days'),
+              },
+              {
+                label: t('sponsorClicks'),
+                value: new Intl.NumberFormat(locale === 'mk' ? 'mk-MK' : 'en-GB').format(stats.clicks),
+                detail: t('last30Days'),
+              },
+              { label: t('sponsorProfile'), value: sponsor.companyName, detail: t('profileVisibility') },
+            ],
+            listTitle: t('activeOffers'),
+            rows: activeOffers.slice(0, 5).map((offer) => ({
+              title: offer.title,
+              detail: offer.validUntil
+                ? t('offerExpires', { date: displayDate(offer.validUntil, locale) })
+                : t('noExpiry'),
+            })),
+            charts: [{
+              title: t('dailySponsorActivity'),
+              points: stats.daily.slice(-30).map((point) => ({
+                label: point.day,
+                value: point.impressions,
+              })),
+            }],
+          };
+        }
+        if (active) setData(summary);
+      } catch (error) {
+        if (error instanceof ApiError || error instanceof z.ZodError || error instanceof TypeError) {
+          console.error(`Unable to load ${role.toLowerCase()} dashboard data.`, error instanceof ApiError ? error.status : 'invalid response or network error');
+        } else {
+          console.error(`Unexpected ${role.toLowerCase()} dashboard error.`, error instanceof Error ? error.name : 'unknown error');
+        }
+        if (active) setFailed(true);
+      }
+    }
+    void load();
+    return () => { active = false; };
+  }, [role, t, locale]);
+
+  if (failed) {
+    return (
+      <div className="rounded-panel border border-line bg-surface p-6 md:p-9" role="alert">
+        <h2 className="text-lg font-semibold text-foreground">{t('overview')}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted">{t('dataUnavailable')}</p>
+      </div>
+    );
+  }
+  if (!data) {
+    return <p aria-live="polite" className="rounded-panel border border-line bg-surface p-6 text-sm text-muted">{t('loading')}</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <section aria-label={t('overview')} className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {data.cards.map((card) => (
+          <article className="min-w-0 rounded-panel border border-line bg-surface p-4 md:p-5" key={card.label}>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">{card.label}</h2>
+            <p className="mt-3 break-words text-2xl font-semibold text-foreground">{card.value}</p>
+            <p className="mt-2 break-words text-sm leading-relaxed text-muted">{card.detail}</p>
+          </article>
+        ))}
+      </section>
+
+      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+        <section className="min-w-0 rounded-panel border border-line bg-surface p-5 md:p-7">
+          <h2 className="text-lg font-semibold text-foreground">{data.listTitle}</h2>
+          {data.rows.length ? (
+            <ul className="mt-4 divide-y divide-line">
+              {data.rows.map((row, index) => (
+                <li className="flex min-w-0 flex-wrap items-start justify-between gap-3 py-3" key={`${row.title}-${index}`}>
+                  <div className="min-w-0">
+                    <p className="break-words font-medium text-foreground">{row.title}</p>
+                    <p className="mt-1 break-words text-sm text-muted">{row.detail}</p>
+                  </div>
+                  {row.status && <Badge className="shrink-0 border-line text-muted">{row.status}</Badge>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm leading-relaxed text-muted">{t('noRecentActivity')}</p>
+          )}
+        </section>
+
+        {data.charts?.map((chart) => {
+          const maxPoint = Math.max(1, ...chart.points.map((point) => point.value));
+          return (
+            <section className="min-w-0 rounded-panel border border-line bg-surface p-5 md:p-7" key={chart.title}>
+              <h2 className="text-lg font-semibold text-foreground">{chart.title}</h2>
+              <div aria-label={chart.title} className="mt-5 flex h-32 items-end gap-1" role="img">
+                {chart.points.map((point) => (
+                  <span
+                    className="min-w-0 flex-1 rounded-t-sm bg-brand-lime/80"
+                    key={point.label}
+                    style={{ height: `${Math.max(4, point.value / maxPoint * 100)}%` }}
+                    title={`${point.label}: ${point.value}`}
+                  />
+                ))}
+              </div>
+              <ul className="sr-only">
+                {chart.points.map((point) => (
+                  <li key={point.label}>{t('chartDataPoint', { label: point.label, value: point.value })}</li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs text-muted">{t('chartAxisDescription')}</p>
+            </section>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

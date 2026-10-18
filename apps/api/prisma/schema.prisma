@@ -76,9 +76,9 @@ enum SponsorTier {
 }
 
 enum TrialStatus {
-  OPEN
-  REVIEW
-  CLOSED
+  NEW
+  CONTACTED
+  CONVERTED
 }
 
 enum PasswordTokenPurpose {
@@ -87,109 +87,109 @@ enum PasswordTokenPurpose {
 }
 
 model User {
-  id                  String                  @id @default(cuid())
-  email               String                  @unique
-  passwordHash        String
-  role                Role                    @default(MEMBER)
-  emailVerifiedAt     DateTime?
-  locale              String                  @default("mk")
-  status              String                  @default("ACTIVE")
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @updatedAt
-  profile             Profile?
-  refreshTokens       RefreshToken[]
-  emailTokens         EmailVerificationToken[]
-  passwordResetTokens PasswordResetToken[]
-  memberships         Membership[]
-  trainerProfile      TrainerProfile?
-  trainerAvailability TrainerAvailability[]
-  trainerClients      TrainerClient[]         @relation("TrainerClientTrainer")
-  memberClients       TrainerClient[]         @relation("TrainerClientMember")
-  appointmentsAsTrainer Appointment[]       @relation("AppointmentTrainer")
-  appointmentsAsMember Appointment[]        @relation("AppointmentMember")
-  sponsor             Sponsor?
-  nutritionQuestionnaires NutritionQuestionnaire[]
-  nutritionPlans      NutritionPlan[]
+  id                        String                     @id @default(cuid())
+  email                     String                     @unique
+  passwordHash              String
+  role                      Role                       @default(MEMBER)
+  emailVerifiedAt           DateTime?
+  locale                    String                     @default("mk")
+  status                    String                     @default("ACTIVE")
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  profile                   Profile?
+  refreshTokens             RefreshToken[]
+  emailTokens               EmailVerificationToken[]
+  passwordResetTokens       PasswordResetToken[]
+  memberships               Membership[]
+  trainerProfile            TrainerProfile?
+  trainerAvailability       TrainerAvailability[]
+  trainerClients            TrainerClient[]            @relation("TrainerClientTrainer")
+  memberClients             TrainerClient[]            @relation("TrainerClientMember")
+  appointmentsAsTrainer     Appointment[]              @relation("AppointmentTrainer")
+  appointmentsAsMember      Appointment[]              @relation("AppointmentMember")
+  sponsor                   Sponsor?
+  nutritionQuestionnaires   NutritionQuestionnaire[]
+  nutritionPlans            NutritionPlan[]
   nutritionGenerationQuotas NutritionGenerationQuota[]
-  auditLogs           AuditLog[]
-  membershipPayments  PaymentRecord[]
-  workoutLogs         WorkoutLog[]
+  auditLogs                 AuditLog[]
+  membershipPayments        PaymentRecord[]
+  workoutLogs               WorkoutLog[]
 }
 
 model Profile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String?
-  phone       String?
-  birthDate   DateTime?
-  gender      Gender?
-  heightCm    Int?
-  weightKg    Float?
-  avatarUrl   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String?
+  phone     String?
+  birthDate DateTime?
+  gender    Gender?
+  heightCm  Int?
+  weightKg  Float?
+  avatarUrl String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model RefreshToken {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   hashedToken String
-  familyId   String
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  userAgent  String?
-  ip         String?
-  createdAt  DateTime  @default(now())
+  familyId    String
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  userAgent   String?
+  ip          String?
+  createdAt   DateTime  @default(now())
 
   @@index([userId, familyId])
 }
 
 model EmailVerificationToken {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hashedToken String   @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hashedToken String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hashedToken String   @unique
-  purpose   PasswordTokenPurpose @default(RESET)
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
+  id          String               @id @default(cuid())
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hashedToken String               @unique
+  purpose     PasswordTokenPurpose @default(RESET)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime             @default(now())
 }
 
 model MembershipPlan {
-  id              String      @id @default(cuid())
-  name            String
-  durationMonths  Int
-  priceMkd        Int
-  isActive        Boolean     @default(true)
-  memberships     Membership[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id             String       @id @default(cuid())
+  name           String
+  durationMonths Int
+  priceMkd       Int
+  isActive       Boolean      @default(true)
+  memberships    Membership[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 model Membership {
-  id            String           @id @default(cuid())
-  userId        String?
-  user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
-  planId        String
-  plan          MembershipPlan   @relation(fields: [planId], references: [id], onDelete: Restrict)
-  startsAt      DateTime
-  endsAt        DateTime?
-  status        MembershipStatus @default(PENDING)
+  id             String           @id @default(cuid())
+  userId         String?
+  user           User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  planId         String
+  plan           MembershipPlan   @relation(fields: [planId], references: [id], onDelete: Restrict)
+  startsAt       DateTime
+  endsAt         DateTime?
+  status         MembershipStatus @default(PENDING)
   paymentRecords PaymentRecord[]
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   @@index([userId])
   @@index([status, endsAt])
@@ -197,31 +197,31 @@ model Membership {
 }
 
 model PaymentRecord {
-  id               String        @id @default(cuid())
-  membershipId     String
-  membership       Membership    @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  amountMkd        Int
-  provider         String        @default("mock")
-  status           PaymentStatus @default(PENDING)
+  id                 String        @id @default(cuid())
+  membershipId       String
+  membership         Membership    @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  amountMkd          Int
+  provider           String        @default("mock")
+  status             PaymentStatus @default(PENDING)
   confirmedByAdminId String?
-  confirmedByAdmin User?         @relation(fields: [confirmedByAdminId], references: [id])
-  confirmedAt      DateTime?
-  createdAt        DateTime      @default(now())
+  confirmedByAdmin   User?         @relation(fields: [confirmedByAdminId], references: [id])
+  confirmedAt        DateTime?
+  createdAt          DateTime      @default(now())
 
   @@index([membershipId])
   @@index([status, confirmedAt])
 }
 
 model TrainerProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bio         String?
-  specialties Json
-  photoUrl    String?
-  bookingVersion Int   @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio            String?
+  specialties    Json
+  photoUrl       String?
+  bookingVersion Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model TrainerAvailability {
@@ -267,21 +267,21 @@ model Appointment {
 }
 
 model Machine {
-  id          String          @id @default(cuid())
-  slug        String          @unique
-  nameMk      String
-  nameEn      String
-  category    MachineCategory
+  id            String          @id @default(cuid())
+  slug          String          @unique
+  nameMk        String
+  nameEn        String
+  category      MachineCategory
   descriptionMk String?
   descriptionEn String?
-  difficulty  Int             @default(1)
-  animationKey String?
-  imageUrl    String?
-  isPublic    Boolean         @default(true)
-  exercises   Exercise[]
-  muscles     MachineMuscle[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  difficulty    Int             @default(1)
+  animationKey  String?
+  imageUrl      String?
+  isPublic      Boolean         @default(true)
+  exercises     Exercise[]
+  muscles       MachineMuscle[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([isPublic, category])
 }
@@ -298,24 +298,24 @@ model MachineMuscle {
 }
 
 model Exercise {
-  id                String        @id @default(cuid())
-  machineId         String
-  machine           Machine       @relation(fields: [machineId], references: [id], onDelete: Cascade)
-  nameMk            String
-  nameEn            String
-  stepsMk           Json?
-  stepsEn           Json?
-  commonMistakesMk  Json?
-  commonMistakesEn  Json?
-  safetyTipsMk      Json?
-  safetyTipsEn      Json?
-  recommendedSets   Int?
-  recommendedReps   Int?
-  youtubeVideoId    String?
-  level             ExerciseLevel @default(BEGINNER)
-  logs              WorkoutLog[]
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  machineId        String
+  machine          Machine       @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  nameMk           String
+  nameEn           String
+  stepsMk          Json?
+  stepsEn          Json?
+  commonMistakesMk Json?
+  commonMistakesEn Json?
+  safetyTipsMk     Json?
+  safetyTipsEn     Json?
+  recommendedSets  Int?
+  recommendedReps  Int?
+  youtubeVideoId   String?
+  level            ExerciseLevel @default(BEGINNER)
+  logs             WorkoutLog[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   @@unique([machineId, nameEn])
 }
@@ -335,28 +335,28 @@ model WorkoutLog {
 }
 
 model WorkoutSet {
-  id          String     @id @default(cuid())
-  logId       String
-  log         WorkoutLog @relation(fields: [logId], references: [id], onDelete: Cascade)
-  setNumber   Int
-  reps        Int
-  weightKg    Float
-  createdAt   DateTime   @default(now())
+  id        String     @id @default(cuid())
+  logId     String
+  log       WorkoutLog @relation(fields: [logId], references: [id], onDelete: Cascade)
+  setNumber Int
+  reps      Int
+  weightKg  Float
+  createdAt DateTime   @default(now())
 
   @@index([logId])
 }
 
 model NutritionQuestionnaire {
-  id               String     @id @default(cuid())
-  memberId         String
-  member           User       @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  answers          Json
-  computedBmr      Float?
-  computedTdee     Float?
-  targetCalories   Float?
-  macros           Json?
-  createdAt        DateTime   @default(now())
-  plans            NutritionPlan[]
+  id             String          @id @default(cuid())
+  memberId       String
+  member         User            @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  answers        Json
+  computedBmr    Float?
+  computedTdee   Float?
+  targetCalories Float?
+  macros         Json?
+  createdAt      DateTime        @default(now())
+  plans          NutritionPlan[]
 }
 
 model NutritionGenerationQuota {
@@ -371,47 +371,48 @@ model NutritionGenerationQuota {
 }
 
 model NutritionPlan {
-  id              String                 @id @default(cuid())
-  memberId        String
-  member          User                   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  questionnaireId String?
-  questionnaire   NutritionQuestionnaire? @relation(fields: [questionnaireId], references: [id], onDelete: SetNull)
-  planJson        Json
-  source          NutritionSource        @default(AI)
-  status          NutritionStatus        @default(DRAFT)
+  id                  String                  @id @default(cuid())
+  memberId            String
+  member              User                    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  questionnaireId     String?
+  questionnaire       NutritionQuestionnaire? @relation(fields: [questionnaireId], references: [id], onDelete: SetNull)
+  planJson            Json
+  source              NutritionSource         @default(AI)
+  status              NutritionStatus         @default(DRAFT)
   approvedByTrainerId String?
-  generationDay   String?
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
+  generationDay       String?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
 
-  @@index([memberId, createdAt])
   @@unique([memberId, generationDay])
+  @@index([memberId, createdAt])
 }
 
 model Sponsor {
-  id          String       @id @default(cuid())
-  userId      String?      @unique
-  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id          String             @id @default(cuid())
+  userId      String?            @unique
+  user        User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   companyName String
   logoUrl     String?
   websiteUrl  String?
-  tier        SponsorTier  @default(BRONZE)
-  isActive    Boolean      @default(true)
+  tier        SponsorTier        @default(BRONZE)
+  isActive    Boolean            @default(true)
   offers      SponsorOffer[]
   stats       SponsorStat[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  dailyStats  SponsorStatDaily[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }
 
 model SponsorOffer {
-  id            String   @id @default(cuid())
-  sponsorId     String
-  sponsor       Sponsor  @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
-  title         String
-  description   String
-  discountCode  String?  @unique
-  validUntil    DateTime?
-  createdAt     DateTime @default(now())
+  id           String    @id @default(cuid())
+  sponsorId    String
+  sponsor      Sponsor   @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  discountCode String?   @unique
+  validUntil   DateTime?
+  createdAt    DateTime  @default(now())
 }
 
 model SponsorStat {
@@ -425,48 +426,62 @@ model SponsorStat {
   @@unique([sponsorId])
 }
 
-model GymRule {
+model SponsorStatDaily {
   id          String   @id @default(cuid())
-  orderIndex  Int
-  titleMk     String
-  titleEn     String
-  bodyMk      String
-  bodyEn      String
-  icon        String?
+  sponsorId   String
+  sponsor     Sponsor  @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  day         String
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([sponsorId, day])
+  @@index([sponsorId, day])
+}
+
+model GymRule {
+  id         String   @id @default(cuid())
+  orderIndex Int
+  titleMk    String
+  titleEn    String
+  bodyMk     String
+  bodyEn     String
+  icon       String?
+  createdAt  DateTime @default(now())
 
   @@unique([orderIndex])
 }
 
 model GymSetting {
-  id          String   @id @default(cuid())
-  key         String   @unique
-  value       String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TrialRequest {
-  id              String      @id @default(cuid())
-  name            String
-  email           String
-  phone           String?
-  preferredDate   DateTime?
-  status          TrialStatus @default(OPEN)
-  createdAt       DateTime    @default(now())
+  id            String      @id @default(cuid())
+  name          String
+  email         String
+  phone         String?
+  preferredDate DateTime?
+  status        TrialStatus @default(NEW)
+  createdAt     DateTime    @default(now())
 
   @@index([status, createdAt])
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  actorId     String?
-  actor       User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
-  action      String
-  entity      String
-  entityId    String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
 
   @@index([actorId, createdAt])
 }

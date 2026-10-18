@@ -443,9 +443,17 @@ export function HomeExperience({
               <a className="button-secondary" href="#statement">{t('exploreGym')}<ArrowDown aria-hidden="true" size={16} /></a>
             </div>
             <div className="hero-trust">
-              <div><span className="trust-label">{t('openingHours')}</span><strong>{openingHours ?? (resourceErrors.settings ? t('notAvailable') : t('loadingValue'))}</strong></div>
+              <div>
+                <span className="trust-label">{t('openingHours')}</span>
+                <strong>{openingHours ?? (resourceErrors.settings ? t('notAvailable') : t('loadingValue'))}</strong>
+                {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('placeholderBadge')}</span>}
+              </div>
               <span aria-hidden="true" className="trust-divider" />
-              <div><span className="trust-label">{t('community')}</span><strong>{t('heroPlaceholderStat')}</strong></div>
+              <div>
+                <span className="trust-label">{t('community')}</span>
+                <strong>{t('heroPlaceholderStat')}</strong>
+                {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('placeholderBadge')}</span>}
+              </div>
             </div>
           </div>
         </div>

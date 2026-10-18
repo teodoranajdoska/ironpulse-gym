@@ -111,11 +111,23 @@ export class SponsorsService {
 
   async ownStats(userId: string) {
     const sponsor = await this.ownedSponsor(userId);
-    const stats = await this.prisma.sponsorStat.findUnique({
-      where: { sponsorId: sponsor.id },
-      select: { impressions: true, clicks: true, createdAt: true },
-    });
-    return stats ?? { impressions: 0, clicks: 0, createdAt: null };
+    const [stats, daily] = await Promise.all([
+      this.prisma.sponsorStat.findUnique({
+        where: { sponsorId: sponsor.id },
+        select: { impressions: true, clicks: true, createdAt: true },
+      }),
+      this.prisma.sponsorStatDaily.findMany({
+        where: { sponsorId: sponsor.id },
+        orderBy: { day: 'asc' },
+        select: { day: true, impressions: true, clicks: true },
+      }),
+    ]);
+    return {
+      impressions: stats?.impressions ?? 0,
+      clicks: stats?.clicks ?? 0,
+      createdAt: stats?.createdAt ?? null,
+      daily,
+    };
   }
 
   async trackImpression(sponsorId: string) {
@@ -124,11 +136,19 @@ export class SponsorsService {
       select: { id: true },
     });
     if (!sponsor) throw new NotFoundException('Active sponsor not found.');
-    await this.prisma.sponsorStat.upsert({
-      where: { sponsorId },
-      update: { impressions: { increment: 1 } },
-      create: { sponsorId, impressions: 1 },
-    });
+    const day = new Date().toISOString().slice(0, 10);
+    await this.prisma.$transaction([
+      this.prisma.sponsorStat.upsert({
+        where: { sponsorId },
+        update: { impressions: { increment: 1 } },
+        create: { sponsorId, impressions: 1 },
+      }),
+      this.prisma.sponsorStatDaily.upsert({
+        where: { sponsorId_day: { sponsorId, day } },
+        update: { impressions: { increment: 1 } },
+        create: { sponsorId, day, impressions: 1 },
+      }),
+    ]);
     return { tracked: true };
   }
 
@@ -145,11 +165,19 @@ export class SponsorsService {
       select: { sponsorId: true },
     });
     if (!offer) throw new NotFoundException('Active offer not found.');
-    await this.prisma.sponsorStat.upsert({
-      where: { sponsorId: offer.sponsorId },
-      update: { clicks: { increment: 1 } },
-      create: { sponsorId: offer.sponsorId, clicks: 1 },
-    });
+    const day = new Date().toISOString().slice(0, 10);
+    await this.prisma.$transaction([
+      this.prisma.sponsorStat.upsert({
+        where: { sponsorId: offer.sponsorId },
+        update: { clicks: { increment: 1 } },
+        create: { sponsorId: offer.sponsorId, clicks: 1 },
+      }),
+      this.prisma.sponsorStatDaily.upsert({
+        where: { sponsorId_day: { sponsorId: offer.sponsorId, day } },
+        update: { clicks: { increment: 1 } },
+        create: { sponsorId: offer.sponsorId, day, clicks: 1 },
+      }),
+    ]);
     return { tracked: true };
   }
 

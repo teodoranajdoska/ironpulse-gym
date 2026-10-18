@@ -64,10 +64,23 @@ export class AuthController {
   @Throttle({ short: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Register a member account' })
   @ApiBody({ schema: { example: { email: 'member@example.com', password: 'password123', name: 'Member' } } })
-  @ApiResponse({ status: 201, description: 'Registration email sent' })
-  register(@Body() body: unknown, @Headers('accept-language') language?: string) {
-    const input = this.parse(registerSchema, body);
-    return this.authService.register(input, this.locale(language));
+  @ApiResponse({ status: 201, description: 'Registration completed; a session is issued when email verification is disabled' })
+  async register(
+    @Body() body: unknown,
+    @Headers('accept-language') language: string | undefined,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<{ message: string; user?: unknown }> {
+    const result = await this.authService.register(
+      this.parse(registerSchema, body),
+      this.locale(language),
+      this.clientMeta(request),
+    );
+    if (result.session) {
+      this.setSessionCookies(response, result.session.accessToken, result.session.refreshToken);
+      return { message: result.message, user: result.session.user };
+    }
+    return { message: result.message };
   }
 
   @Post('login')

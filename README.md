@@ -49,8 +49,8 @@ For a later production SMTP setup, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `S
 
 ## Authentication and security
 
-- Registration accepts MEMBER accounts only. Argon2 hashes passwords; a 24-hour random verification token is SHA-256 hashed in the database and emailed in Macedonian or English.
-- Login rejects unverified/inactive accounts and sets a 15-minute signed access JWT plus a random seven-day refresh token in `HttpOnly`, `SameSite=Lax` cookies. Cookies are `Secure` only in production.
+- Registration accepts MEMBER accounts only. Argon2 hashes passwords. `EMAIL_VERIFICATION_REQUIRED` (API) and `NEXT_PUBLIC_EMAIL_VERIFICATION_REQUIRED` (web) must match: both default to `false`, which verifies new accounts immediately and signs them in; set both to `true` to require the existing 24-hour emailed verification link before sign-in.
+- Login rejects inactive accounts and, only when verification is required, unverified accounts. A session uses a 15-minute signed access JWT plus a random seven-day refresh token in `HttpOnly`, `SameSite=Lax` cookies. Cookies are `Secure` only in production.
 - Refresh tokens are hashed in SQLite and rotated on use. Reusing a revoked token revokes all active refresh tokens for that user and records an audit event.
 - Password-reset links are hashed, one-hour, and single-use. Reset revokes all refresh sessions. Admin-created trainer/sponsor accounts receive a one-time set-password invitation.
 - All state-changing requests require the double-submit `csrf_token` cookie and `x-csrf-token` header. Call `GET /auth/csrf` to obtain the initial token.
@@ -60,14 +60,31 @@ For a later production SMTP setup, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `S
 
 ## Development seed accounts
 
-Each seeded account is email-verified and uses the same development-only password, `password123`:
+All 19 demo accounts are email-verified and use the same local-only password, `password123`. Each dashboard loads role-specific seed data immediately after sign-in.
 
-- Admin: `admin@ironpulse.local`
-- Trainers: `trainer1@ironpulse.local`, `trainer2@ironpulse.local`
-- Members: `member1@ironpulse.local` through `member5@ironpulse.local`
-- Sponsors: `sponsor1@ironpulse.local`, `sponsor2@ironpulse.local`
+| Email | Role | What to look at |
+| --- | --- | --- |
+| `admin@ironpulse.test` | Admin | Pending mock payments, trial requests, recent audit activity, popular machines, monthly new-member and revenue charts. |
+| `trainer@ironpulse.test` | Trainer | Four assigned clients, today's request, upcoming sessions, and client list. |
+| `trainer2@ironpulse.test` | Trainer | Four assigned clients, confirmed and requested appointments, weekly availability. |
+| `trainer3@ironpulse.test` | Trainer | Four assigned clients, appointment history, cancellations, and future sessions. |
+| `member@ironpulse.test` | Member | Active one-month plan expiring in five days, 10 weeks of logged progress, draft meal plan, and an upcoming trainer appointment. |
+| `member2@ironpulse.test` | Member | Active three-month membership expiring in about three weeks and workout history. |
+| `member3@ironpulse.test` | Member | Active six-month membership, workout history, and trainer-approved vegetarian plan. |
+| `member4@ironpulse.test` | Member | Active 12-month membership and workout history. |
+| `member5@ironpulse.test` | Member | Active three-month membership, workout history, and trainer-approved halal plan. |
+| `member6@ironpulse.test` | Member | Active six-month membership and workout history. |
+| `member7@ironpulse.test` | Member | Pending membership request and a draft vegetarian nutrition plan. |
+| `member8@ironpulse.test` | Member | Pending membership request waiting for admin review. |
+| `member9@ironpulse.test` | Member | Expired membership and trainer assignment. |
+| `member10@ironpulse.test` | Member | Expired membership and trainer assignment. |
+| `member11@ironpulse.test` | Member | No membership; assigned trainer client with no workout history. |
+| `member12@ironpulse.test` | Member | No membership; assigned trainer client with no workout history. |
+| `sponsor@ironpulse.test` | Sponsor | Active offers, profile summary, and 30 days of impression/click analytics. |
+| `sponsor2@ironpulse.test` | Sponsor | Sponsor profile, current and expired offers, and daily analytics. |
+| `sponsor3@ironpulse.test` | Sponsor | Sponsor profile, offer list, and daily analytics. |
 
-Never use seeded credentials outside a local development database.
+Never use seeded credentials outside a local development database. `pnpm db:seed` is idempotent and refuses to run with `NODE_ENV=production`; `pnpm db:reset` recreates the local database from migrations before seeding.
 
 ## Database and tests
 
@@ -75,7 +92,7 @@ Never use seeded credentials outside a local development database.
 - `pnpm db:seed`: idempotently seed development accounts and gym content.
 - `pnpm db:reset`: delete the local development DB, recreate it from migrations, and seed it.
 - `pnpm db:studio`: open Prisma Studio.
-- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`: run workspace checks.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm check:i18n`: run workspace checks; the i18n check fails when the Macedonian and English message-key sets differ.
 - `pnpm test` automatically creates a separate `test.db`, applies migrations and seed data, runs API unit/e2e tests, and deletes the test DB and journal afterwards.
 
 ## API overview (Phase 2B)
@@ -93,15 +110,30 @@ All endpoints are documented in Swagger at `/api/docs`. Protected write requests
 - **Admin:** `/admin/users` supports paginated search/role/status filters; `PATCH /admin/users/:userId/status` activates or suspends accounts. `GET /admin/dashboard` reports member/membership counts, confirmed mock-payment revenue by confirmation month, monthly new members, popular machines, and pending payments. `GET /admin/audit-log` returns paginated audit records.
 - **Privacy:** authenticated users can download `GET /me/export` as JSON and request `DELETE /me` with `{ "password": "..." }`. Deletion anonymizes the account, removes personal profile/workout/nutrition/appointment/token data, detaches financial records, and preserves non-personal payment and sponsor aggregates.
 
-The development seed includes active and pending memberships, machine muscles and bilingual exercise instructions, plus eight weeks of sample workout logs for the first member.
+The development seed includes the full role mix above, 12 machines with bilingual instructions, 10 gym rules, membership/payment history, 10 weeks of progressive workouts for eight members, four seven-day meal plans, trainer availability and appointments, sponsor offers and 30 days of analytics, trial requests, and audit entries. Seed dates are generated relative to the current date.
 
 ## Manual auth smoke test
 
-1. Open http://localhost:3000/register and register a member.
-2. Find the verification action link in the API console or the new HTML file in `apps/api/.dev-mails/`.
-3. Follow the link. Sign in at http://localhost:3000/login; the member dashboard displays the API-backed name and role.
-4. Reload the dashboard to verify the cookie-backed session refresh, then use **Log out**.
+1. With both verification flags `false`, register at http://localhost:3000/register. Registration should sign in immediately and open the member dashboard without sending a verification email.
+2. For the required-verification path, set both flags to `true`, restart the apps, register a fresh address, and open its link from the API console or `apps/api/.dev-mails/`. The UI should show the check-email step and block login until verification.
+3. Request a password reset from http://localhost:3000/forgot-password and follow the local email link. Confirm reset, then sign in with the new password.
+4. Reload a dashboard to verify cookie-backed session refresh, then use **Log out**.
 5. While signed in as a member, navigate to http://localhost:3000/admin. Middleware redirects to `/member`; protected API operations are independently checked by backend RBAC.
+
+## Responsive review checklist
+
+Use browser F12 device mode and inspect each width below in both `mk` and `en`, with the dark and light themes:
+
+| Width | Device class | Check |
+| ---: | --- | --- |
+| 360 px | compact phone | No horizontal page overflow or clipped headings; 44 px controls; forms and consent banner fit; safe-area spacing. |
+| 390 px | phone | Full-screen navigation opens/closes, traps page scrolling while open, closes with Escape, and leaves the page usable after closing. |
+| 768 px | tablet | Navigation and card grids reflow cleanly; no overlapping hero, card, form, or footer content. |
+| 1024 px | small laptop/tablet landscape | Sidebar and dashboard columns fit without squeezing cards or page-level overflow. |
+| 1280 px | laptop | Homepage sections, dashboard charts, and image focal points are balanced. |
+| 1536 px | large desktop | Content stays within the intended max-width; wide layouts do not leave excessively long text lines. |
+
+At every width, inspect `/`, `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, and each role's dashboard. Verify the homepage story and machine sections do not pin or overflow on touch-sized screens; dashboard side navigation collapses to the mobile drawer; tables (where present) scroll inside their own container; headings and long names wrap; buttons/inputs remain keyboard-usable; and mobile browser height uses the visible viewport. On a phone, also test the notch/safe area, form keyboard scrolling, drawer dismissal, and consent banner dismissal. In each language, check that no message key is missing and that seeded names/statuses remain readable.
 
 ## Phase 1 fixture note
 

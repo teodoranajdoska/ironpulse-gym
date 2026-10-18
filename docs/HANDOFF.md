@@ -25,7 +25,7 @@ Copy-Item apps/api/.env.example apps/api/.env
 Copy-Item apps/web/.env.example apps/web/.env.local
 ```
 
-The checked-in JWT secret is for local development only. `WEB_URL` sets the origin used in verification and password-reset links. The SQLite URL in the API example creates `apps/api/prisma/dev.db`; no external database is required. SMTP and the Anthropic key can remain blank for local development.
+The checked-in JWT secret is for local development only. `WEB_URL` sets the origin used in verification and password-reset links. The SQLite URL in the API example creates `apps/api/prisma/dev.db`; no external database is required. SMTP and the Anthropic key can remain blank for local development. Email verification is optional by default: keep `EMAIL_VERIFICATION_REQUIRED` in the API environment and `NEXT_PUBLIC_EMAIL_VERIFICATION_REQUIRED` in the web environment aligned. Both examples default to `false`; setting both to `true` restores the email-verification gate.
 
 Then initialize and run the apps:
 
@@ -37,20 +37,31 @@ pnpm dev
 
 The web app is at <http://localhost:3000>, the API at <http://localhost:4000>, and the OpenAPI/Swagger UI at <http://localhost:4000/api/docs>. The API health check is <http://localhost:4000/health>.
 
-`pnpm db:migrate` generates the Prisma client before applying migrations, so a fresh install does not depend on a previously generated client. `pnpm dev` builds the shared package before starting both apps. Other useful checks are `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`.
+`pnpm db:migrate` generates the Prisma client before applying migrations, so a fresh install does not depend on a previously generated client. `pnpm dev` builds the shared package before starting both apps. Other useful checks are `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check:i18n`.
 
 ## Seeded development accounts
 
-All seeded accounts are verified and share the local-only password `password123`:
+All 19 seeded accounts are verified and share the local-only password `password123`:
 
 | Role | Email |
 | --- | --- |
-| Admin | `admin@ironpulse.local` |
-| Trainer | `trainer1@ironpulse.local`, `trainer2@ironpulse.local` |
-| Member | `member1@ironpulse.local` through `member5@ironpulse.local` |
-| Sponsor | `sponsor1@ironpulse.local`, `sponsor2@ironpulse.local` |
+| Admin | `admin@ironpulse.test` |
+| Trainer | `trainer@ironpulse.test`, `trainer2@ironpulse.test`, `trainer3@ironpulse.test` |
+| Member | `member@ironpulse.test`, `member2@ironpulse.test` through `member12@ironpulse.test` |
+| Sponsor | `sponsor@ironpulse.test`, `sponsor2@ironpulse.test`, `sponsor3@ironpulse.test` |
 
 Do not use this password or these accounts outside a local development database.
+The account-by-account dashboard contents and the laptop/phone responsive checklist are maintained in the README's [Development seed accounts](../README.md#development-seed-accounts) and [Responsive review checklist](../README.md#responsive-review-checklist) sections.
+
+## Phase 3D changes
+
+- Registration supports both verification modes. In optional mode, new members are verified and signed in immediately; in required mode, the existing verification email and login gate remain active. Password-reset and development-mail flows remain available in either mode.
+- The role overview pages now load live member, trainer, admin, and sponsor summaries from their respective API endpoints, including workout/membership/nutrition/appointment data, operational queues, popularity, revenue/signup trends, and sponsor activity.
+- The demo seed is upsert-based, date-relative, production-guarded, and includes role-specific histories, appointments, workouts, nutrition plans, content, sponsor analytics, and audit activity. `pnpm db:reset` rebuilds and reseeds the local database.
+- Use `pnpm check:i18n` to verify that the `mk` and `en` message keys match.
+- The responsive drawer locks background scrolling, closes on Escape, respects safe areas, and uses the dynamic viewport height on mobile.
+
+The exact code-check and visual-review result for this phase is recorded in [PROGRESS.md](../PROGRESS.md). Do not report the six viewport widths or every role's visual review as complete unless those browser checks have actually been run.
 
 ## Frontend API integration
 

@@ -25,4 +25,4 @@ export const trialRequestSchema = z.object({
   preferredDate: z.coerce.date().optional(),
 });
 
-export const trialStatusSchema = z.enum(['OPEN', 'REVIEW', 'CLOSED']);
+export const trialStatusSchema = z.enum(['NEW', 'CONTACTED', 'CONVERTED']);

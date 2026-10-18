@@ -31,7 +31,7 @@ export function LanguageSwitch({ id = 'language-switch' }: { id?: string }): JSX
       <label className="sr-only" htmlFor={id}>{t('language')}</label>
       <select
         id={id}
-        className="ml-2 h-10 cursor-pointer rounded-full border border-line bg-surface px-3 text-xs font-semibold uppercase tracking-widest text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lime"
+        className="ml-2 h-11 min-w-11 cursor-pointer rounded-full border border-line bg-surface px-3 text-xs font-semibold uppercase tracking-widest text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-lime"
         onChange={(event) => changeLocale(event.target.value)}
         value={locale}
       >

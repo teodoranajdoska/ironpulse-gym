@@ -35,7 +35,7 @@ export function ThemeToggle(): JSX.Element {
   return (
     <button
       aria-label={theme === 'dark' ? t('lightTheme') : t('darkTheme')}
-      className="theme-toggle inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-foreground transition hover:border-brand-lime hover:text-brand-lime"
+      className="theme-toggle inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-foreground transition hover:border-brand-lime hover:text-brand-lime"
       onClick={toggleTheme}
       type="button"
     >

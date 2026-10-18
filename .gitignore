@@ -16,3 +16,5 @@ apps/api/.dev-mails/
 
 # Backup output is written outside the repository at ../ironpulse-backups/.
 .DS_Store
+
+*.tsbuildinfo

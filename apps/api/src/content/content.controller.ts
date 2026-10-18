@@ -123,7 +123,7 @@ export class ContentController {
   @Patch('admin/trial-requests/:id')
   @Roles('ADMIN')
   @ApiCookieAuth('ip_access')
-  @ApiBody({ schema: { example: { status: 'REVIEW' } } })
+  @ApiBody({ schema: { example: { status: 'CONTACTED' } } })
   updateTrialRequest(
     @CurrentUser() user: AuthenticatedRequest['user'],
     @Param('id') id: string,

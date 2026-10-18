@@ -19,7 +19,7 @@ const activeUser = {
   profile: { name: 'Member' },
 };
 
-function dependencies() {
+function dependencies(emailVerificationRequired = false) {
   const transaction = {
     refreshToken: {
       updateMany: jest.fn(async (_args: unknown) => ({ count: 1 })),
@@ -67,9 +67,11 @@ function dependencies() {
     signAsync: jest.fn(async (_payload: unknown, _options: unknown) => 'signed-access-token'),
   };
   const configMocks = {
-    get: jest.fn((key: keyof Env) =>
-      key === 'JWT_SECRET' ? 'unit-test-secret-with-at-least-32-characters' : 'test',
-    ),
+    get: jest.fn((key: keyof Env) => {
+      if (key === 'JWT_SECRET') return 'unit-test-secret-with-at-least-32-characters';
+      if (key === 'EMAIL_VERIFICATION_REQUIRED') return emailVerificationRequired;
+      return 'test';
+    }),
   };
   const mailMocks = {
     sendVerification: jest.fn(async (_email: string, _locale: string, _token: string) => undefined),
@@ -90,11 +92,12 @@ describe('AuthService', () => {
     jest.clearAllMocks();
   });
 
-  test('register stores a member with profile and sends verification email', async () => {
-    const { service, prismaMocks, mailMocks } = dependencies();
+  test('register sends verification email when verification is required', async () => {
+    const { service, prismaMocks, mailMocks } = dependencies(true);
     const result = await service.register(
       { email: 'member@example.com', password: 'password123', name: 'Member' },
       'en',
+      {},
     );
     expect(result.message).toContain('Registration successful');
     expect(prismaMocks.user.create).toHaveBeenCalledTimes(1);
@@ -103,6 +106,27 @@ describe('AuthService', () => {
       'en',
       expect.any(String),
     );
+    expect(prismaMocks.refreshToken.create).not.toHaveBeenCalled();
+  });
+
+  test('register verifies the member and creates a session when verification is optional', async () => {
+    const { service, prismaMocks, mailMocks } = dependencies();
+    const result = await service.register(
+      { email: 'member@example.com', password: 'password123', name: 'Member' },
+      'en',
+      {},
+    );
+    expect(result.session?.user.email).toBe('member@example.com');
+    expect(prismaMocks.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'ACTIVE',
+          emailVerifiedAt: expect.any(Date),
+        }),
+      }),
+    );
+    expect(mailMocks.sendVerification).not.toHaveBeenCalled();
+    expect(prismaMocks.refreshToken.create).toHaveBeenCalledTimes(1);
   });
 
   test('login rejects unknown accounts with a generic auth error', async () => {
@@ -115,6 +139,20 @@ describe('AuthService', () => {
   });
 
   test('login rejects unverified users', async () => {
+    const { service, prismaMocks } = dependencies(true);
+    const passwordHash = await argon2.hash('password123');
+    prismaMocks.user.findUnique.mockResolvedValue({
+      ...activeUser,
+      emailVerifiedAt: null,
+      passwordHash,
+    });
+
+    await expect(
+      service.login({ email: activeUser.email, password: 'password123' }, {}),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  test('login accepts an unverified active user when verification is optional', async () => {
     const { service, prismaMocks } = dependencies();
     const passwordHash = await argon2.hash('password123');
     prismaMocks.user.findUnique.mockResolvedValue({
@@ -124,7 +162,7 @@ describe('AuthService', () => {
     });
     await expect(
       service.login({ email: activeUser.email, password: 'password123' }, {}),
-    ).rejects.toThrow(UnauthorizedException);
+    ).resolves.toHaveProperty('user.email', activeUser.email);
   });
 
   test('refresh revokes the old token and stores a replacement in the same family', async () => {

@@ -53,6 +53,7 @@ export function SiteFooter(): JSX.Element {
         </div>
         <div className="site-footer__contact">
           <h2>{t('contactHeading')}</h2>
+          {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('devOnly')}</span>}
           <p><strong>{t('hoursLabel')}:</strong> {setting('opening_hours')}</p>
           <p><strong>{t('addressLabel')}:</strong> {setting('address')}</p>
           {phone ? <a href={`tel:${phone}`}><strong>{t('phoneLabel')}:</strong> {phone}</a> : <p><strong>{t('phoneLabel')}:</strong> {setting('phone')}</p>}
@@ -62,7 +63,7 @@ export function SiteFooter(): JSX.Element {
           <h2>{t('legalHeading')}</h2>
           <Link href="/privacy">{t('privacy')}</Link>
           <Link href="/terms">{t('terms')}</Link>
-          <span>{t('socialPlaceholder')}</span>
+          <span>{t('socialPlaceholder')} {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('devOnly')}</span>}</span>
         </nav>
       </div>
       <div className="page-width site-footer__bottom">

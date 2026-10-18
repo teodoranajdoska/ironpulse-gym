@@ -56,9 +56,15 @@ export class AuthService {
     private readonly mail: MailService,
   ) {}
 
-  async register(input: RegisterInput, locale: string): Promise<{ message: string }> {
+  async register(
+    input: RegisterInput,
+    locale: string,
+    meta: ClientMeta,
+  ): Promise<{ message: string; session?: AuthSession }> {
     const passwordHash = await argon2.hash(input.password);
     const rawToken = newToken();
+    const verificationRequired = this.emailVerificationRequired();
+    const verifiedAt = verificationRequired ? null : new Date();
     let user: AuthUser;
     try {
       user = await this.prisma.user.create({
@@ -66,15 +72,20 @@ export class AuthService {
           email: input.email.toLowerCase(),
           passwordHash,
           role: 'MEMBER',
-          status: 'PENDING',
+          status: verificationRequired ? 'PENDING' : 'ACTIVE',
+          emailVerifiedAt: verifiedAt,
           locale,
           profile: { create: { name: input.name } },
-          emailTokens: {
-            create: {
-              hashedToken: digest(rawToken),
-              expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            },
-          },
+          ...(verificationRequired
+            ? {
+                emailTokens: {
+                  create: {
+                    hashedToken: digest(rawToken),
+                    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                  },
+                },
+              }
+            : {}),
         },
         include: { profile: { select: { name: true } } },
       });
@@ -84,8 +95,14 @@ export class AuthService {
       }
       throw error;
     }
-    await this.mail.sendVerification(user.email, locale, rawToken);
-    return { message: 'Registration successful. Check your email to verify your account.' };
+    if (verificationRequired) {
+      await this.mail.sendVerification(user.email, locale, rawToken);
+      return { message: 'Registration successful. Check your email to verify your account.' };
+    }
+    return {
+      message: 'Registration successful.',
+      session: await this.createSession(user, meta),
+    };
   }
 
   async verifyEmail(rawToken: string): Promise<void> {
@@ -147,7 +164,11 @@ export class AuthService {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
     const validPassword = await argon2.verify(user.passwordHash, input.password);
-    if (!validPassword || !user.emailVerifiedAt || user.status !== 'ACTIVE') {
+    if (
+      !validPassword ||
+      (this.emailVerificationRequired() && !user.emailVerifiedAt) ||
+      user.status !== 'ACTIVE'
+    ) {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
@@ -374,7 +395,11 @@ export class AuthService {
       where: { id: userId },
       include: { profile: { select: { name: true } } },
     });
-    if (!user || user.status !== 'ACTIVE' || !user.emailVerifiedAt) {
+    if (
+      !user ||
+      user.status !== 'ACTIVE' ||
+      (this.emailVerificationRequired() && !user.emailVerifiedAt)
+    ) {
       throw new UnauthorizedException('Session expired. Please sign in again.');
     }
     return this.toAuthUser(user);
@@ -426,6 +451,10 @@ export class AuthService {
       'code' in error &&
       error.code === 'P2002'
     );
+  }
+
+  private emailVerificationRequired(): boolean {
+    return this.config.get('EMAIL_VERIFICATION_REQUIRED') === true;
   }
 }
 

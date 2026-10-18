@@ -36,12 +36,14 @@
 }
 
 html {
+  min-height: 100%;
   scroll-behavior: auto;
   background: var(--background);
 }
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   overflow-x: hidden;
   background: var(--background);
@@ -220,6 +222,7 @@ summary {
   font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  vertical-align: middle;
 }
 
 .home-page {
@@ -316,6 +319,7 @@ summary {
   letter-spacing: -0.075em;
   line-height: 0.78;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .hero-title > span {
@@ -416,8 +420,11 @@ summary {
   right: max(1.5rem, calc((100vw - 1440px) / 2));
   bottom: 2.8rem;
   display: flex;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   align-items: center;
   gap: 0.8rem;
+  padding: 0.4rem;
   color: rgba(255, 255, 255, 0.72);
   font-size: 0.65rem;
   font-weight: 700;
@@ -733,6 +740,7 @@ summary {
 .platform-step a,
 .text-link {
   display: inline-flex;
+  min-height: 2.75rem;
   align-items: center;
   gap: 0.45rem;
   color: var(--accent-readable);
@@ -1046,7 +1054,9 @@ summary {
 .machine-card__body .text-link,
 .machine-card__body a {
   display: inline-flex;
+  min-height: 2.75rem;
   align-items: center;
+  padding: 0.25rem 0;
   gap: 0.45rem;
   color: var(--accent-readable);
   font-size: 0.74rem;
@@ -1247,8 +1257,8 @@ summary {
 
 .testimonial-controls button {
   display: grid;
-  width: 2.3rem;
-  height: 2.3rem;
+  width: 2.75rem;
+  height: 2.75rem;
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 50%;
@@ -1668,6 +1678,7 @@ summary {
   top: 0;
   right: 0;
   left: 0;
+  padding-top: env(safe-area-inset-top);
   border-bottom: 1px solid transparent;
   transition: background 220ms ease, border-color 220ms ease, color 220ms ease;
 }
@@ -1710,6 +1721,9 @@ summary {
 }
 
 .site-brand {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
   font-size: 1.65rem;
   font-weight: 700;
 }
@@ -1727,6 +1741,9 @@ summary {
 
 .site-nav-link,
 .site-login-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
   transition: color 180ms ease;
 }
 
@@ -1741,8 +1758,8 @@ summary {
 }
 
 .site-header .site-theme-toggle {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-color: rgba(255, 255, 255, 0.28);
   background: rgba(10, 12, 10, 0.28);
   color: currentColor;
@@ -1774,9 +1791,13 @@ summary {
   z-index: 55;
   inset: 0;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1rem;
-  padding: 6rem 1.5rem 2rem;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(6rem + env(safe-area-inset-top)) 1.5rem calc(2rem + env(safe-area-inset-bottom));
   background: var(--background);
 }
 
@@ -1795,6 +1816,7 @@ summary {
 }
 
 .site-mobile-menu a {
+  min-height: 2.75rem;
   padding: 0.6rem 0;
   border-bottom: 1px solid var(--line);
   font-family: var(--font-display), sans-serif;
@@ -1823,6 +1845,9 @@ summary {
 }
 
 .site-footer__brand {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
   font-size: 1.8rem;
   font-weight: 700;
 }
@@ -1841,6 +1866,7 @@ summary {
   display: grid;
   gap: 0.65rem;
   align-content: start;
+  min-width: 0;
 }
 
 .site-footer__contact h2,
@@ -1852,13 +1878,30 @@ summary {
   text-transform: uppercase;
 }
 
-.site-footer__contact p,
-.site-footer__contact a,
-.site-footer__links a {
+.site-footer__contact p {
   margin: 0;
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.site-footer__contact a,
+.site-footer__links a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.text-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
 }
 
 .site-footer__links {
@@ -2019,6 +2062,14 @@ summary {
   transform: translateY(-160%);
 }
 
+.dashboard-shell h1,
+.legal-page h1,
+.system-page h1 {
+  max-width: 100%;
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  overflow-wrap: anywhere;
+}
+
 .skip-link:focus {
   transform: translateY(0);
 }
@@ -2161,6 +2212,7 @@ summary {
   .home-hero {
     min-height: 790px;
     min-height: 100svh;
+    min-height: 100dvh;
     align-items: end;
   }
 
@@ -2176,7 +2228,11 @@ summary {
   }
 
   .hero-title {
-    font-size: clamp(4.1rem, 18vw, 7rem);
+    font-size: clamp(3.5rem, 17vw, 6.25rem);
+  }
+
+  .hero-title-line {
+    display: block;
   }
 
   .hero-subtitle {
@@ -2186,6 +2242,7 @@ summary {
   }
 
   .hero-trust {
+    align-items: flex-start;
     gap: 0.9rem;
   }
 
@@ -2196,7 +2253,7 @@ summary {
 
   .hero-scroll {
     right: 1rem;
-    bottom: 1.3rem;
+    bottom: max(1.3rem, env(safe-area-inset-bottom));
   }
 
   .hero-scroll span {
@@ -2219,6 +2276,45 @@ summary {
 
   .trial-cta {
     width: calc(100% - 2rem);
+  }
+
+  .section-title,
+  .trial-cta__copy .section-title {
+    font-size: clamp(2.4rem, 10vw, 4rem);
+    overflow-wrap: anywhere;
+  }
+
+  .statement-copy {
+    font-size: clamp(2.45rem, 9.4vw, 4.5rem);
+    overflow-wrap: anywhere;
+  }
+
+  .hero-trust > div {
+    min-width: 0;
+  }
+
+  .hero-trust strong {
+    overflow-wrap: anywhere;
+  }
+
+  .site-header__inner {
+    min-height: 4.75rem;
+    padding-top: 0.25rem;
+  }
+
+  .site-mobile-menu__actions {
+    flex-wrap: wrap;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .auth-layout {
+    min-height: 100dvh;
+    padding-top: 6.5rem;
+    padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+  }
+
+  .dashboard-shell {
+    padding-top: 6.5rem;
   }
 }
 

@@ -69,16 +69,16 @@ describe('trainer and appointment access', () => {
 
   it('serializes two concurrent bookings so only one can reserve an overlapping slot', async () => {
     const trainer = await database.user.findUniqueOrThrow({
-      where: { email: 'trainer1@ironpulse.local' },
+      where: { email: 'trainer@ironpulse.test' },
       select: { id: true },
     });
     const [memberOne, memberTwo] = await Promise.all([
       database.user.findUniqueOrThrow({
-        where: { email: 'member2@ironpulse.local' },
+        where: { email: 'member2@ironpulse.test' },
         select: { id: true },
       }),
       database.user.findUniqueOrThrow({
-        where: { email: 'member3@ironpulse.local' },
+        where: { email: 'member3@ironpulse.test' },
         select: { id: true },
       }),
     ]);

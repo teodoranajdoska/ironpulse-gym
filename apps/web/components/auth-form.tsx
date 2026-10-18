@@ -52,9 +52,19 @@ export function AuthForm({ kind }: { kind: AuthFormKind }): JSX.Element {
       }
       if (kind === 'register') {
         const input = registerSchema.parse({ email, password, name });
-        await apiPost('/auth/register', input);
-        setNotice(t('registerSuccess'));
-        router.replace('/verify-email');
+        const result = await apiPostParsed(
+          '/auth/register',
+          input,
+          z.object({ message: z.string(), user: authUserSchema.optional() }),
+        );
+        if (result.user) {
+          setUser(result.user);
+          router.replace(dashboardPaths[result.user.role]);
+          router.refresh();
+        } else {
+          setNotice(t('registerSuccess'));
+          router.replace('/verify-email');
+        }
         return;
       }
       if (kind === 'verify') {
