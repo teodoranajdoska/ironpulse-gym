@@ -120,6 +120,31 @@ export class TrainersService {
     return { memberId };
   }
 
+  async clientProfile(trainerId: string, memberId: string) {
+    await this.assertClient(trainerId, memberId);
+    const member = await this.prisma.user.findFirst({
+      where: { id: memberId, role: 'MEMBER', status: 'ACTIVE' },
+      select: {
+        id: true,
+        email: true,
+        createdAt: true,
+        profile: {
+          select: {
+            name: true,
+            phone: true,
+            birthDate: true,
+            gender: true,
+            heightCm: true,
+            weightKg: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+    if (!member) throw new NotFoundException('Assigned member not found.');
+    return member;
+  }
+
   async clientWorkoutProgress(
     trainerId: string,
     memberId: string,

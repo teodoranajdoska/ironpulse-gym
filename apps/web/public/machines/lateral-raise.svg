@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M275 340h250m-210 0V265h170v75" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="400" cy="125" r="25" fill="#e8f1e1"/><path d="M400 155v126m0-86-125-41m125 41 125-41m-125 127-45 63m45-63 45 63" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="19"/>
+  <circle cx="275" cy="154" r="13" fill="#b7ff39"/><circle cx="525" cy="154" r="13" fill="#b7ff39"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">LATERAL RAISE</text>
+</svg>

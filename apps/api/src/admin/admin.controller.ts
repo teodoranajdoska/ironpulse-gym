@@ -62,8 +62,13 @@ export class AdminController {
 
   @Get('audit-log')
   @ApiOperation({ summary: 'List paginated administrative audit records' })
-  auditLog(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
-    return this.admin.auditLog({ page, pageSize });
+  auditLog(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('action') action?: string,
+    @Query('entity') entity?: string,
+  ) {
+    return this.admin.auditLog({ page, pageSize, action, entity });
   }
 
   @Post('accounts')

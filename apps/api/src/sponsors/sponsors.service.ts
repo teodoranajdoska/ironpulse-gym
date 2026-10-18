@@ -36,7 +36,10 @@ export class SponsorsService {
           websiteUrl: true,
           tier: true,
           offers: {
-            where: { OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }] },
+            where: {
+              isActive: true,
+              OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }],
+            },
             orderBy: { createdAt: 'desc' },
             select: {
               id: true,
@@ -63,6 +66,24 @@ export class SponsorsService {
     });
     if (!sponsor) throw new NotFoundException('Sponsor profile not found.');
     return sponsor;
+  }
+
+  async adminList(input: { page?: string; pageSize?: string }) {
+    const page = pagination(input);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.sponsor.findMany({
+        include: {
+          user: { select: { id: true, email: true, status: true, profile: { select: { name: true } } } },
+          offers: { orderBy: { createdAt: 'desc' } },
+          stats: { select: { impressions: true, clicks: true } },
+        },
+        orderBy: { companyName: 'asc' },
+        skip: page.skip,
+        take: page.take,
+      }),
+      this.prisma.sponsor.count(),
+    ]);
+    return paginated(data, total, page.page, page.pageSize);
   }
 
   async updateOwnProfile(userId: string, input: SponsorProfileInput) {
@@ -160,6 +181,7 @@ export class SponsorsService {
           isActive: true,
           user: { status: 'ACTIVE' },
         },
+        isActive: true,
         OR: [{ validUntil: null }, { validUntil: { gt: new Date() } }],
       },
       select: { sponsorId: true },

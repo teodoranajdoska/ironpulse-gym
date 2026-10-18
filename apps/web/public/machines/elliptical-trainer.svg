@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M230 340h340m-300-5 70-150m160 150-70-150m-90 0h100m-92-8-24-112m108 112 24-112m-150 0h190" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="330" cy="110" r="23" fill="#e8f1e1"/><path d="m330 137 56 65-45 49m45-49 72 50m-117-1-38 84m83-84 49 84" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="19"/>
+  <ellipse cx="330" cy="338" rx="51" ry="10" fill="#b7ff39"/><ellipse cx="470" cy="338" rx="51" ry="10" fill="#b7ff39"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">ELLIPTICAL TRAINER</text>
+</svg>

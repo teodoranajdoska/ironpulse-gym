@@ -6,10 +6,67 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { randomBytes } from 'node:crypto';
 import * as argon2 from 'argon2';
+import { MemberProfileUpdateInput } from '@ironpulse/shared';
 
 @Injectable()
 export class PrivacyService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        locale: true,
+        profile: {
+          select: {
+            name: true,
+            phone: true,
+            birthDate: true,
+            gender: true,
+            heightCm: true,
+            weightKg: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found.');
+    return user;
+  }
+
+  async updateProfile(userId: string, input: MemberProfileUpdateInput) {
+    const { locale, ...profile } = input;
+    const [user] = await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: userId },
+        data: locale === undefined ? {} : { locale },
+        select: { id: true, email: true, locale: true },
+      }),
+      this.prisma.profile.upsert({
+        where: { userId },
+        update: {
+          ...profile,
+          ...(profile.birthDate === undefined
+            ? {}
+            : { birthDate: profile.birthDate === null ? null : new Date(profile.birthDate) }),
+        },
+        create: {
+          userId,
+          name: profile.name ?? null,
+          phone: profile.phone ?? null,
+          birthDate: profile.birthDate ? new Date(profile.birthDate) : null,
+          gender: profile.gender ?? null,
+          heightCm: profile.heightCm ?? null,
+          weightKg: profile.weightKg ?? null,
+          avatarUrl: profile.avatarUrl ?? null,
+        },
+      }),
+    ]);
+    const current = await this.getProfile(userId);
+    return { ...user, profile: current.profile };
+  }
 
   async exportUserData(userId: string) {
     const user = await this.prisma.user.findUnique({

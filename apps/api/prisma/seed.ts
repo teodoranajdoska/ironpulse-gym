@@ -79,19 +79,30 @@ async function upsertUser(
 
 const trainerContent = [
   {
-    bio: 'Тренер за силов тренинг и одржлив напредок. / Strength coach focused on sustainable progress.',
-    specialties: ['Силов тренинг', 'Strength training', 'Техника и прогресија'],
-    photoUrl: '/images/trainers/trainer-1.jpg',
+    bio: 'Тренер за сила што ти помага да напредуваш постепено, со добра техника и одржлив план. / Strength coach helping you progress steadily with sound technique and a sustainable plan.',
+    specialties: [
+      'Силов тренинг / Strength training',
+      'Техника и прогресија / Technique and progression',
+    ],
+    photoUrl: null,
   },
   {
-    bio: 'Помага на почетници да изградат сигурна техника и рутина. / Helps beginners build confident technique and consistency.',
-    specialties: ['Функционален тренинг', 'Mobility', 'Почетнички програми'],
-    photoUrl: '/images/trainers/trainer-2.jpg',
+    bio: 'Им помага на почетниците да ја совладаат техниката и да изградат рутина што можат да ја одржат. / Helps beginners build confident technique and a routine they can maintain.',
+    specialties: [
+      'Функционален тренинг / Functional training',
+      'Подвижност / Mobility',
+      'Програми за почетници / Beginner programmes',
+    ],
+    photoUrl: null,
   },
   {
-    bio: 'Насочен тренинг за кондиција, сила и враќање во форма. / Coaching for conditioning, strength and a confident return to training.',
-    specialties: ['Кондиција', 'Strength training', 'Индивидуално планирање'],
-    photoUrl: '/images/trainers/trainer-3.jpg',
+    bio: 'Планира тренинзи за подобра кондиција и сила, со постепено враќање во активна форма. / Plans training for better conditioning and strength, with a gradual return to activity.',
+    specialties: [
+      'Кондициски тренинг / Conditioning',
+      'Силов тренинг / Strength training',
+      'Индивидуално планирање / Individual planning',
+    ],
+    photoUrl: null,
   },
 ];
 
@@ -111,6 +122,7 @@ type ExerciseContent = {
 
 type MachineContent = {
   slug: string;
+  youtubeVideoId: string;
   nameMk: string;
   nameEn: string;
   category: MachineCategory;
@@ -150,6 +162,7 @@ function exercise(
 const machines: MachineContent[] = [
   {
     slug: 'barbell-squat',
+    youtubeVideoId: 'dW3zj79xfrc',
     nameMk: 'Чучњ со шипка',
     nameEn: 'Barbell squat',
     category: MachineCategory.LEGS,
@@ -177,6 +190,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'leg-press',
+    youtubeVideoId: 'EotSw18oR9w',
     nameMk: 'Преса за нозе',
     nameEn: 'Leg press',
     category: MachineCategory.LEGS,
@@ -203,6 +217,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'bench-press',
+    youtubeVideoId: 'hWbUlkb5Ms4',
     nameMk: 'Бенч-прес',
     nameEn: 'Bench press',
     category: MachineCategory.CHEST,
@@ -230,6 +245,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'pec-deck',
+    youtubeVideoId: 'a9vQ_hwIksU',
     nameMk: 'Пек-дек',
     nameEn: 'Pec deck',
     category: MachineCategory.CHEST,
@@ -256,6 +272,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'lat-pulldown',
+    youtubeVideoId: 'bNmvKpJSWKM',
     nameMk: 'Лат-повлекување',
     nameEn: 'Lat pulldown',
     category: MachineCategory.BACK,
@@ -282,6 +299,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'seated-row',
+    youtubeVideoId: 'qD1WZ5pSuvk',
     nameMk: 'Седечко веслање',
     nameEn: 'Seated row',
     category: MachineCategory.BACK,
@@ -308,6 +326,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'shoulder-press',
+    youtubeVideoId: '6v4nrRVySj0',
     nameMk: 'Потисок за раменици',
     nameEn: 'Shoulder press',
     category: MachineCategory.SHOULDERS,
@@ -334,6 +353,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'lateral-raise',
+    youtubeVideoId: 'Kl3LEzQ5Zqs',
     nameMk: 'Странично подигање',
     nameEn: 'Lateral raise',
     category: MachineCategory.SHOULDERS,
@@ -360,6 +380,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'bicep-curl',
+    youtubeVideoId: 'MKWBV29S6c0',
     nameMk: 'Свиткување за бицепс',
     nameEn: 'Biceps curl',
     category: MachineCategory.ARMS,
@@ -386,6 +407,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'tricep-pushdown',
+    youtubeVideoId: 'u36jNfqh8_U',
     nameMk: 'Трицепс-потисок',
     nameEn: 'Triceps pushdown',
     category: MachineCategory.ARMS,
@@ -412,6 +434,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'plank-station',
+    youtubeVideoId: 'F-C0CzNK22s',
     nameMk: 'Станица за планк',
     nameEn: 'Core station',
     category: MachineCategory.CORE,
@@ -438,6 +461,7 @@ const machines: MachineContent[] = [
   },
   {
     slug: 'treadmill',
+    youtubeVideoId: 'y_CoBECEdNA',
     nameMk: 'Трака за трчање',
     nameEn: 'Treadmill',
     category: MachineCategory.CARDIO,
@@ -462,19 +486,73 @@ const machines: MachineContent[] = [
         ['Choose a pace suited to your fitness and use the safety clip.', 'Step onto the side rails after the belt stops.']),
     ],
   },
+  {
+    slug: 'elliptical-trainer',
+    youtubeVideoId: 'EesEvYohy5o',
+    nameMk: 'Елиптична тренажерка',
+    nameEn: 'Elliptical trainer',
+    category: MachineCategory.CARDIO,
+    descriptionMk: 'Кардио тренажерка со низок удар за непрекинато движење на целото тело.',
+    descriptionEn: 'A low-impact cardio machine for continuous full-body movement.',
+    difficulty: 1,
+    muscles: ['cardiovascular system', 'quadriceps'],
+    exercises: [
+      exercise('Рамномерно елиптично движење', 'Steady elliptical session',
+        ['Застани на педалите и фати ги неподвижните рачки пред да започнеш.', 'Избери лесен отпор и движи ги рацете и нозете во мазен ритам.', 'Зголеми го отпорот постепено, па намали го за да се оладиш.'],
+        ['Step onto the pedals and hold the stationary handles before starting.', 'Choose a light resistance and move your arms and legs in a smooth rhythm.', 'Increase resistance gradually, then ease off to cool down.'],
+        ['Се потпираш врз рачките.', 'Отпорот се зголемува пребрзо.'],
+        ['Leaning heavily on the handles.', 'Increasing resistance too quickly.'],
+        ['Зачекори на педалите додека машината е запрена.', 'Запри ако почувствуваш вртоглавица или остра болка.'],
+        ['Step onto the pedals while the machine is stopped.', 'Stop if you feel dizzy or experience sharp pain.']),
+      exercise('Интервали на елиптична тренажерка', 'Elliptical intervals',
+        ['Започни со лесно темпо неколку минути.', 'Менувај кратки побрзи интервали со подолги периоди на лесно движење.', 'Заврши со неколку минути лесно темпо и почекај педалите да запрат.'],
+        ['Start with an easy pace for several minutes.', 'Alternate short faster intervals with longer periods of easy movement.', 'Finish with a few easy minutes and wait for the pedals to stop.'],
+        ['Се забрзува пред загревање.', 'Телото се ниша за да се придвижат рачките.'],
+        ['Speeding up before warming up.', 'Rocking the torso to move the handles.'],
+        ['Избери интервали што можеш да ги одржиш со контролирано дишење.', 'Држи ги стапалата целосно на педалите.'],
+        ['Choose intervals that allow controlled breathing.', 'Keep both feet fully on the pedals.']),
+    ],
+  },
+  {
+    slug: 'cable-crossover',
+    youtubeVideoId: 'I-Ue34qLxc4',
+    nameMk: 'Кросовер со сајли',
+    nameEn: 'Cable crossover',
+    category: MachineCategory.CHEST,
+    descriptionMk: 'Прилагодлива сајла за контролирано спојување на рацете пред телото.',
+    descriptionEn: 'An adjustable cable station for controlled arm adduction in front of the body.',
+    difficulty: 2,
+    muscles: ['pectorals', 'shoulders'],
+    exercises: [
+      exercise('Кросовер за гради', 'Cable chest fly',
+        ['Постави ги сајлите над нивото на рамениците и застани стабилно во средина.', 'Со благо свиткани лакти, спој ги рацете пред градите.', 'Врати ги рацете наназад само до удобен опсег и повтори.'],
+        ['Set the cables above shoulder height and stand steadily in the middle.', 'With a soft bend in your elbows, bring your hands together in front of your chest.', 'Return your arms only to a comfortable range and repeat.'],
+        ['Лактите се заклучуваат.', 'Тежината ја влече раката предлабоко наназад.'],
+        ['Locking the elbows.', 'Letting the load pull the arms too far back.'],
+        ['Почни со мала тежина и провери ги приклучоците на сајлите.', 'Движи се контролирано без болка во рамото.'],
+        ['Start with a light load and check the cable attachments.', 'Move under control and avoid shoulder pain.']),
+      exercise('Низок кросовер за гради', 'Low cable fly',
+        ['Постави ги рачките на ниска позиција и застани со едната нога малку напред.', 'Подигни ги рацете во лак до висина на градите без да го нишаш трупот.', 'Врати се бавно до почетната положба.'],
+        ['Set the handles low and stand with one foot slightly forward.', 'Raise your arms in an arc to chest height without swinging your torso.', 'Return slowly to the starting position.'],
+        ['Се користи замав од колковите.', 'Рацете се креваат над нивото на рамениците.'],
+        ['Using momentum from the hips.', 'Raising the hands above shoulder level.'],
+        ['Затегни го трупот и избери тежина што можеш да ја контролираш.', 'Држи ги зглобовите неутрални.'],
+        ['Brace your trunk and choose a load you can control.', 'Keep your wrists neutral.']),
+    ],
+  },
 ];
 
 const gymRules = [
-  ['Почитувај го просторот', 'Respect the space', 'Остави доволно место околу секоја станица и внимавај на луѓето што тренираат.', 'Leave room around each station and stay aware of people training nearby.', 'people'],
-  ['Врати ја опремата', 'Return equipment', 'Врати ги теговите и додатоците на нивното место за следниот тренинг да започне безбедно.', 'Return weights and attachments so the next session can start safely.', 'equipment'],
-  ['Исчисти по користење', 'Wipe down after use', 'Избриши ги клупата, рачките и подлогите по употреба. Средствата за чистење се поставени низ салата.', 'Wipe benches, handles and mats after use. Cleaning supplies are available throughout the gym.', 'clean'],
-  ['Тренирај со контрола', 'Train with control', 'Избери тежина што можеш да ја движиш со добра техника. Побарај помош ако не си сигурен.', 'Choose a load you can move with good technique. Ask for help if you are unsure.', 'control'],
-  ['Користи пешкир', 'Use a towel', 'Постави пешкир на клупата и другите површини што ги користиш.', 'Place a towel on benches and other surfaces you use.', 'towel'],
-  ['Сподели ја опремата', 'Share equipment', 'Во зафатен период, дозволи на другите да се вклучат меѓу сериите.', 'During busy periods, let others work in between your sets.', 'share'],
-  ['Чувај ја патеката слободна', 'Keep walkways clear', 'Не оставај торби, шишиња или тегови на патеките и излезите.', 'Keep bags, bottles and weights clear of walkways and exits.', 'walkway'],
-  ['Почитувај ја музиката и разговорот', 'Be considerate with sound', 'Користи слушалки со умерена јачина и зборувај соодветно на заеднички простор.', 'Use headphones at a considerate volume and keep conversations suitable for a shared space.', 'sound'],
-  ['Провери ја опремата', 'Check equipment', 'Пријави лабава, оштетена или неисправна опрема кај тимот пред да ја користиш.', 'Tell the team about loose, damaged or faulty equipment before using it.', 'check'],
-  ['Поддржувај без притисок', 'Encourage without pressure', 'Биди љубезен и давај совети само кога некој ќе ги побара.', 'Be welcoming and offer training advice only when someone asks.', 'respect'],
+  ['Почитувај го просторот', 'Respect the space', 'Остави простор околу справите и внимавај на луѓето што тренираат во близина.', 'Leave room around equipment and stay aware of people training nearby.', 'people'],
+  ['Врати ја опремата', 'Return equipment', 'Врати ги теговите и додатоците на означеното место по секоја серија.', 'Return weights and attachments to their marked storage place after each set.', 'equipment'],
+  ['Исчисти по користење', 'Wipe down after use', 'Избриши ги клупата, рачките и подлогата по употреба. Средствата за чистење се достапни низ салата.', 'Wipe benches, handles and mats after use. Cleaning supplies are available throughout the gym.', 'clean'],
+  ['Тренирај со контрола', 'Train with control', 'Избери тежина што можеш да ја движиш со стабилна техника. Побарај помош ако не си сигурен.', 'Choose a load you can move with steady technique. Ask for help if you are unsure.', 'control'],
+  ['Користи пешкир', 'Use a towel', 'Постави чист пешкир на клупите и површините што ги користиш.', 'Place a clean towel on benches and other surfaces you use.', 'towel'],
+  ['Сподели ја опремата', 'Share equipment', 'Во зафатени периоди, дозволи им на другите да се вклучат меѓу твоите серии.', 'During busy periods, let others work in between your sets.', 'share'],
+  ['Чувај ги патеките слободни', 'Keep walkways clear', 'Чувај ги торбите, шишињата и теговите подалеку од патеките и излезите.', 'Keep bags, bottles and weights clear of walkways and exits.', 'walkway'],
+  ['Биди внимателен со звукот', 'Be considerate with sound', 'Користи слушалки со умерена јачина и води сметка за другите во заедничкиот простор.', 'Use headphones at a considerate volume and be mindful of others in the shared space.', 'sound'],
+  ['Провери ја опремата', 'Check equipment', 'Не користи лабава или оштетена опрема. Пријави го проблемот кај тимот.', 'Do not use loose or damaged equipment. Report the problem to the team.', 'check'],
+  ['Поддржувај без притисок', 'Encourage without pressure', 'Биди љубезен и понуди совет за тренинг само кога некој ќе го побара.', 'Be welcoming and offer training advice only when someone asks.', 'respect'],
 ] as const;
 
 async function main(): Promise<void> {
@@ -537,6 +615,7 @@ async function main(): Promise<void> {
   }
 
   const sponsorUsers: Awaited<ReturnType<typeof upsertUser>>[] = [];
+  // TODO: Replace these sample partner names and example.com URLs before publishing.
   const sponsorData = [
     { email: 'sponsor@ironpulse.test', name: 'Весна Илиевска', companyName: 'Vardar Active', tier: SponsorTier.GOLD, websiteUrl: 'https://example.com/vardar-active' },
     { email: 'sponsor2@ironpulse.test', name: 'Горан Милев', companyName: 'Balkan Nutrition', tier: SponsorTier.SILVER, websiteUrl: 'https://example.com/balkan-nutrition' },
@@ -600,6 +679,7 @@ async function main(): Promise<void> {
         descriptionEn: machine.descriptionEn,
         difficulty: machine.difficulty,
         animationKey: machine.slug,
+        imageUrl: `/machines/${machine.slug}.svg`,
         isPublic: true,
       },
       create: {
@@ -611,6 +691,7 @@ async function main(): Promise<void> {
         descriptionEn: machine.descriptionEn,
         difficulty: machine.difficulty,
         animationKey: machine.slug,
+        imageUrl: `/machines/${machine.slug}.svg`,
         isPublic: true,
       },
     });
@@ -636,7 +717,7 @@ async function main(): Promise<void> {
           recommendedSets: content.sets,
           recommendedReps: content.reps,
           level: content.level,
-          youtubeVideoId: 'TODO-replace',
+          youtubeVideoId: machine.youtubeVideoId,
         },
         create: {
           machineId: record.id,
@@ -651,8 +732,7 @@ async function main(): Promise<void> {
           recommendedSets: content.sets,
           recommendedReps: content.reps,
           level: content.level,
-          // TODO-replace with an approved, verified video ID before publishing.
-          youtubeVideoId: 'TODO-replace',
+          youtubeVideoId: machine.youtubeVideoId,
         },
       });
       seededExercises.push(exerciseRecord);
@@ -670,7 +750,7 @@ async function main(): Promise<void> {
 
   // TODO: replace demo contact details with approved gym information; the web UI labels these DEV ONLY.
   const settings = [
-    ['opening_hours', 'DEMO · Понеделник–петок 06:00–23:00; сабота–недела 08:00–20:00 / Mon–Fri 06:00–23:00; Sat–Sun 08:00–20:00'],
+    ['opening_hours', 'DEMO · Понеделник–петок 06:00–23:00; сабота–недела 08:00–20:00 / Monday–Friday 06:00–23:00; Saturday–Sunday 08:00–20:00'],
     ['address', 'DEMO · Скопје, Северна Македонија / Skopje, North Macedonia'],
     ['phone', 'DEMO · +389 70 000 000'],
     ['email', 'DEMO · hello@ironpulse.test'],
@@ -745,8 +825,17 @@ async function main(): Promise<void> {
     },
   });
 
+  const lockedMember = members[1];
+  if (!lockedMember) throw new Error('Missing seeded locked-state member.');
+  await prisma.membership.deleteMany({
+    where: {
+      userId: lockedMember.id,
+      id: { in: ['demo-history-2', 'demo-active-2'] },
+    },
+  });
+
   for (const [index, member] of members.entries()) {
-    if (index >= 10) continue;
+    if (index >= 10 || index === 1) continue;
     const historyDate = dateMonthsFromNow(-(index % 6 + 1), 8 + index % 10);
     const historicalPlan = planDefinitions[index % planDefinitions.length];
     const historyEnd = dateFromNow(-35 - index * 2);
@@ -769,8 +858,9 @@ async function main(): Promise<void> {
   }
 
   const activePlanIds = ['1 month', '3 months', '6 months', '12 months', '3 months', '6 months'];
-  const activeExpiryDays = [5, 21, 67, 124, 92, 160];
+  const activeExpiryDays = [5, 0, 21, 67, 124, 160];
   for (let index = 0; index < 6; index += 1) {
+    if (index === 1) continue;
     const plan = await membershipPlan(activePlanIds[index]);
     const endsAt = dateFromNow(activeExpiryDays[index]);
     const startsAt = shiftMonths(endsAt, -plan.durationMonths);
@@ -831,12 +921,12 @@ async function main(): Promise<void> {
     );
   }
 
-  // Add a rising six-month paid-membership curve without changing the six current ACTIVE subscriptions.
+  // Keep the seeded revenue history separate from current ACTIVE subscriptions.
   for (let month = 1; month <= 6; month += 1) {
     const paymentCount = month + 1;
     const paidAt = dateMonthsFromNow(-month, 10);
     for (let item = 0; item < paymentCount; item += 1) {
-      const memberIndex = (month * 2 + item) % 10;
+      const memberIndex = [0, 2, 3, 4, 5, 6, 7, 8, 9][(month * 2 + item) % 9];
       const plan = planDefinitions[(month + item) % planDefinitions.length];
       const membershipId = `demo-revenue-membership-${month}-${item}`;
       const end = shiftMonths(paidAt, plan.durationMonths);
@@ -1240,7 +1330,7 @@ async function main(): Promise<void> {
     });
   }
 
-  if (machineIds.size !== 12 || seededExercises.length !== 24 || sponsorUsers.length !== 3) {
+  if (machineIds.size !== 14 || seededExercises.length !== 28 || sponsorUsers.length !== 3) {
     throw new Error('Demo seed data is incomplete.');
   }
   const workoutCount = await prisma.workoutLog.count({

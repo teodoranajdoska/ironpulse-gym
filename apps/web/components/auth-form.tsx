@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import type { Route } from 'next';
 import { useTranslations } from 'next-intl';
 import {
   authUserSchema,
@@ -13,7 +14,7 @@ import {
 } from '@ironpulse/shared';
 import { z } from 'zod';
 import { ApiError, apiPost, apiPostParsed } from '@/lib/api-client';
-import { dashboardPaths } from '@/lib/dashboard';
+import { dashboardPaths, safeReturnTo } from '@/lib/dashboard';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,8 +46,8 @@ export function AuthForm({ kind }: { kind: AuthFormKind }): JSX.Element {
         const input = loginSchema.parse({ email, password });
         const result = await apiPostParsed('/auth/login', input, loginResponseSchema);
         setUser(result.user);
-        const destination = dashboardPaths[result.user.role];
-        router.replace(destination);
+        const destination = safeReturnTo(searchParams.get('next'), dashboardPaths[result.user.role]);
+        router.replace(destination as Route);
         router.refresh();
         return;
       }
@@ -109,11 +110,12 @@ export function AuthForm({ kind }: { kind: AuthFormKind }): JSX.Element {
     <form className="space-y-5" onSubmit={(event) => void submit(event)} noValidate>
       <h1 className="display-font text-4xl font-bold leading-none tracking-tightest text-foreground">{t(titleKey)}</h1>
       {kind === 'register' && (
-        <Field label={t('name')} value={name} onChange={setName} autoComplete="name" />
+        <Field id="register-name" label={t('name')} value={name} onChange={setName} autoComplete="name" />
       )}
       {(kind === 'login' || kind === 'register' || kind === 'forgot' || kind === 'resend') && (
         <Field
           label={t('email')}
+          id={`${kind}-email`}
           value={email}
           onChange={setEmail}
           type="email"
@@ -123,6 +125,7 @@ export function AuthForm({ kind }: { kind: AuthFormKind }): JSX.Element {
       {(kind === 'login' || kind === 'register' || kind === 'reset') && (
         <Field
           label={kind === 'reset' ? t('newPassword') : t('password')}
+          id={`${kind}-password`}
           value={password}
           onChange={setPassword}
           type="password"
@@ -132,6 +135,7 @@ export function AuthForm({ kind }: { kind: AuthFormKind }): JSX.Element {
       {kind === 'reset' && (
         <Field
           label={t('confirmPassword')}
+          id="reset-confirm-password"
           value={confirmation}
           onChange={setConfirmation}
           type="password"
@@ -153,19 +157,20 @@ export function AuthForm({ kind }: { kind: AuthFormKind }): JSX.Element {
 }
 
 function Field({
+  id,
   label,
   value,
   onChange,
   type = 'text',
   autoComplete,
 }: {
+  id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   autoComplete?: string;
 }): JSX.Element {
-  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   return (
     <div>
       <label className="mb-2 block text-sm font-medium text-muted" htmlFor={id}>{label}</label>

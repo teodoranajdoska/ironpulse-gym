@@ -4,9 +4,10 @@ import {
   Controller,
   Delete,
   Get,
+  Patch,
 } from '@nestjs/common';
 import { ApiBody, ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { confirmPasswordSchema } from '@ironpulse/shared';
+import { confirmPasswordSchema, memberProfileUpdateSchema } from '@ironpulse/shared';
 import { ZodError } from 'zod';
 import { AuthenticatedRequest } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -22,6 +23,21 @@ export class PrivacyController {
   @ApiOperation({ summary: 'Export the authenticated user personal data as JSON' })
   export(@CurrentUser() user: AuthenticatedRequest['user']) {
     return this.privacy.exportUserData(this.userId(user));
+  }
+
+  @Get('profile')
+  @ApiOperation({ summary: 'Read the authenticated user profile and locale' })
+  profile(@CurrentUser() user: AuthenticatedRequest['user']) {
+    return this.privacy.getProfile(this.userId(user));
+  }
+
+  @Patch('profile')
+  @ApiOperation({ summary: 'Update the authenticated user profile and locale' })
+  updateProfile(
+    @CurrentUser() user: AuthenticatedRequest['user'],
+    @Body() body: unknown,
+  ) {
+    return this.privacy.updateProfile(this.userId(user), this.parse(memberProfileUpdateSchema, body));
   }
 
   @Delete()

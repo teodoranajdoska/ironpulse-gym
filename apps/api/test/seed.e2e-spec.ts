@@ -29,8 +29,25 @@ describe('Phase 3D demo seed', () => {
       members: 12,
       sponsors: 3,
     });
-    expect(machines).toBe(12);
-    expect(exercises).toBe(24);
+    expect(machines).toBe(14);
+    expect(exercises).toBe(28);
+    const seededMachines = await prisma.machine.findMany({
+      include: { muscles: true, exercises: true },
+    });
+    for (const machine of seededMachines) {
+      expect(machine.animationKey).toBe(machine.slug);
+      expect(machine.imageUrl).toBe(`/machines/${machine.slug}.svg`);
+      expect(machine.muscles.length).toBeGreaterThan(0);
+      expect(machine.exercises).toHaveLength(2);
+      for (const exercise of machine.exercises) {
+        expect(exercise.stepsEn).toEqual(expect.arrayContaining([expect.any(String)]));
+        expect(exercise.commonMistakesEn).toEqual(expect.arrayContaining([expect.any(String)]));
+        expect(exercise.safetyTipsEn).toEqual(expect.arrayContaining([expect.any(String)]));
+        expect(exercise.recommendedSets).toBeGreaterThan(0);
+        expect(exercise.recommendedReps).toBeGreaterThan(0);
+        expect(exercise.youtubeVideoId).toMatch(/^[A-Za-z0-9_-]{11}$/);
+      }
+    }
     expect(plans).toBe(4);
     expect(auditEntries).toBeGreaterThanOrEqual(20);
   });
@@ -58,7 +75,7 @@ describe('Phase 3D demo seed', () => {
         }),
         prisma.user.count({
           where: {
-            email: { in: ['member11@ironpulse.test', 'member12@ironpulse.test'] },
+            email: { in: ['member2@ironpulse.test', 'member11@ironpulse.test', 'member12@ironpulse.test'] },
             memberships: { none: {} },
           },
         }),
@@ -73,12 +90,12 @@ describe('Phase 3D demo seed', () => {
         }),
       ]);
 
-    expect(active).toBe(6);
+    expect(active).toBe(5);
     expect(pending).toBe(2);
     expect(firstExpired.endsAt?.getTime()).toBeLessThan(Date.now());
     expect(secondExpired.endsAt?.getTime()).toBeLessThan(Date.now());
-    expect(memberHistory).toHaveLength(10);
-    expect(noMemberships).toBe(2);
+    expect(memberHistory).toHaveLength(9);
+    expect(noMemberships).toBe(3);
     expect(trainerClients).toBe(12);
     expect(workouts).toBe(480);
     expect(await prisma.paymentRecord.count({

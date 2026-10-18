@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M400 110v230m-170 0h340m-250-90h160M275 140l-45 120m295-120 45 120m-340-70h70m270 0h-70" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="400" cy="150" r="24" fill="#e8f1e1"/><path d="M400 180v96m0-62-83-30m83 30 83-30m-83 92-42 68m42-68 42 68" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="18"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">PEC DECK</text>
+</svg>

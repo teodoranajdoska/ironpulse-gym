@@ -63,6 +63,7 @@ export class MachinesService {
       name: input.locale === 'mk' ? machine.nameMk : machine.nameEn,
       category: machine.category,
       difficulty: machine.difficulty,
+      animationKey: machine.animationKey,
       imageUrl: machine.imageUrl,
       muscles: machine.muscles.map(({ muscleGroup, primary }) => ({ muscleGroup, primary })),
     }));
@@ -81,6 +82,8 @@ export class MachinesService {
       name: locale === 'mk' ? machine.nameMk : machine.nameEn,
       category: machine.category,
       description: locale === 'mk' ? machine.descriptionMk : machine.descriptionEn,
+      animationKey: machine.animationKey,
+      imageUrl: machine.imageUrl,
       muscles: machine.muscles.map(({ muscleGroup, primary }) => ({ muscleGroup, primary })),
     };
   }

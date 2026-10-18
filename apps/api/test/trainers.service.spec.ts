@@ -67,6 +67,31 @@ describe('trainer and appointment access', () => {
     expect(prismaMock.workoutLog.findMany).not.toHaveBeenCalled();
   });
 
+  it('returns a client profile only after confirming the trainer assignment', async () => {
+    const findFirst = jest.fn().mockResolvedValue({
+      id: 'member-id',
+      email: 'member@example.test',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      profile: { name: 'Member', phone: null },
+    });
+    const prismaMock = {
+      trainerClient: { findUnique: jest.fn().mockResolvedValue({ status: 'ACTIVE' }) },
+      user: { findFirst },
+    };
+    const service = new TrainersService(
+      prismaMock as unknown as PrismaService,
+      {} as never,
+    );
+
+    await expect(service.clientProfile('trainer-id', 'member-id')).resolves.toMatchObject({
+      id: 'member-id',
+      profile: { name: 'Member' },
+    });
+    expect(findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'member-id', role: 'MEMBER', status: 'ACTIVE' },
+    }));
+  });
+
   it('serializes two concurrent bookings so only one can reserve an overlapping slot', async () => {
     const trainer = await database.user.findUniqueOrThrow({
       where: { email: 'trainer@ironpulse.test' },

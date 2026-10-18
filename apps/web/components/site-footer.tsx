@@ -2,20 +2,23 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { APP_NAME } from '@ironpulse/shared';
 import { LanguageSwitch } from '@/components/language-switch';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ApiError, apiGet } from '@/lib/api-client';
+import { localizedSeedCopy } from '@/lib/localized-copy';
 
 const settingsSchema = z.array(z.object({ key: z.string(), value: z.string() }));
 type Setting = z.infer<typeof settingsSchema>[number];
 
 export function SiteFooter(): JSX.Element {
   const t = useTranslations('footer');
+  const locale = useLocale();
   const [settings, setSettings] = useState<Setting[]>([]);
   const [failed, setFailed] = useState(false);
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   useEffect(() => {
     let active = true;
@@ -36,11 +39,17 @@ export function SiteFooter(): JSX.Element {
   }, []);
 
   function setting(key: string): string {
-    return settings.find((item) => item.key === key)?.value ?? t(failed ? 'notAvailable' : 'loading');
+    const value = settings.find((item) => item.key === key)?.value;
+    if (!value) return t(failed ? 'notAvailable' : 'loading');
+    if (!isDevelopment && value.startsWith('DEMO ·')) return t('notAvailable');
+    return localizedSeedCopy(value, locale);
   }
 
-  const phone = settings.find((item) => item.key === 'phone')?.value;
-  const email = settings.find((item) => item.key === 'email')?.value;
+  const phoneValue = settings.find((item) => item.key === 'phone')?.value;
+  const emailValue = settings.find((item) => item.key === 'email')?.value;
+  const phone = phoneValue && !phoneValue.startsWith('DEMO ·') ? phoneValue : undefined;
+  const email = emailValue && !emailValue.startsWith('DEMO ·') ? emailValue : undefined;
+  const hasDemoSettings = settings.some((item) => item.value.startsWith('DEMO ·'));
 
   return (
     <footer className="site-footer" id="footer">
@@ -53,7 +62,7 @@ export function SiteFooter(): JSX.Element {
         </div>
         <div className="site-footer__contact">
           <h2>{t('contactHeading')}</h2>
-          {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('devOnly')}</span>}
+          {isDevelopment && hasDemoSettings && <span className="dev-placeholder-badge">{t('devOnly')}</span>}
           <p><strong>{t('hoursLabel')}:</strong> {setting('opening_hours')}</p>
           <p><strong>{t('addressLabel')}:</strong> {setting('address')}</p>
           {phone ? <a href={`tel:${phone}`}><strong>{t('phoneLabel')}:</strong> {phone}</a> : <p><strong>{t('phoneLabel')}:</strong> {setting('phone')}</p>}
@@ -63,7 +72,6 @@ export function SiteFooter(): JSX.Element {
           <h2>{t('legalHeading')}</h2>
           <Link href="/privacy">{t('privacy')}</Link>
           <Link href="/terms">{t('terms')}</Link>
-          <span>{t('socialPlaceholder')} {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('devOnly')}</span>}</span>
         </nav>
       </div>
       <div className="page-width site-footer__bottom">

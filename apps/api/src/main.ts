@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
+import { isAllowedCorsOrigin } from './config/cors-origin';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -13,7 +14,13 @@ async function bootstrap(): Promise<void> {
   const configService = app.get(AppConfigService);
   const origins = configService.get('CORS_ORIGINS').split(',').map((origin) => origin.trim());
   app.enableCors({
-    origin: origins,
+    origin: (origin, callback) => {
+      if (isAllowedCorsOrigin(origin, origins, configService.get('NODE_ENV') === 'development')) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Origin is not allowed by CORS.'));
+    },
     credentials: true,
   });
 

@@ -135,6 +135,14 @@ export class SponsorsController {
     return this.sponsors.adminCreate(this.userId(user), this.parse(sponsorCreateSchema, body));
   }
 
+  @Get('admin')
+  @Roles('ADMIN')
+  @ApiCookieAuth('ip_access')
+  @ApiOperation({ summary: 'List sponsors and their current status' })
+  adminList(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.sponsors.adminList({ page, pageSize });
+  }
+
   @Patch('admin/:sponsorId/status')
   @Roles('ADMIN')
   @ApiCookieAuth('ip_access')

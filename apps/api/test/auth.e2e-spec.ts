@@ -73,6 +73,9 @@ describe('Auth lifecycle (SQLite)', () => {
     await agent.get('/content/admin/rules').expect(403);
 
     await agent.get('/auth/me').expect(200);
+    const profile = await agent.get('/me/profile').expect(200);
+    expect(profile.body.email).toBe(email);
+    expect(profile.body.profile.name).toBe('E2E Member');
     const refreshResponse = await agent
       .post('/auth/refresh')
       .set('x-csrf-token', csrfToken)
@@ -161,7 +164,10 @@ describe('Auth lifecycle (SQLite)', () => {
       expect(record.emailVerifiedAt).toBeInstanceOf(Date);
       expect(record.status).toBe('ACTIVE');
       expect(record.emailTokens).toHaveLength(0);
-      await prisma.user.update({ where: { email: optionalEmail }, data: { emailVerifiedAt: null } });
+      await prisma.user.update({
+        where: { email: optionalEmail },
+        data: { emailVerifiedAt: null, status: 'PENDING' },
+      });
       const login = await optionalAgent
         .post('/auth/login')
         .set('x-csrf-token', token)
@@ -169,6 +175,12 @@ describe('Auth lifecycle (SQLite)', () => {
         .expect(200);
       expect(login.body.user.email).toBe(optionalEmail);
       expect(login.headers['set-cookie']).toBeDefined();
+      const activated = await prisma.user.findUniqueOrThrow({
+        where: { email: optionalEmail },
+        select: { emailVerifiedAt: true, status: true },
+      });
+      expect(activated.status).toBe('ACTIVE');
+      expect(activated.emailVerifiedAt).toBeInstanceOf(Date);
     } finally {
       await optionalApp.close();
     }
@@ -263,7 +275,7 @@ describe('Auth lifecycle (SQLite)', () => {
     expect(details.body.steps.length).toBeGreaterThan(0);
     expect(details.body.commonMistakes.length).toBeGreaterThan(0);
     expect(details.body.safetyTips.length).toBeGreaterThan(0);
-    expect(details.body.videoId).toBe('TODO-replace');
+    expect(details.body.videoId).toMatch(/^[A-Za-z0-9_-]{11}$/);
 
     const logged = await member
       .post('/workouts')

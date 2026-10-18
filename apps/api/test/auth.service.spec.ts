@@ -165,6 +165,27 @@ describe('AuthService', () => {
     ).resolves.toHaveProperty('user.email', activeUser.email);
   });
 
+  test('login activates a pending unverified member when verification becomes optional', async () => {
+    const { service, prismaMocks } = dependencies();
+    const passwordHash = await argon2.hash('password123');
+    prismaMocks.user.findUnique.mockResolvedValue({
+      ...activeUser,
+      status: 'PENDING',
+      emailVerifiedAt: null,
+      passwordHash,
+    });
+
+    await expect(
+      service.login({ email: activeUser.email, password: 'password123' }, {}),
+    ).resolves.toHaveProperty('user.email', activeUser.email);
+    expect(prismaMocks.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: activeUser.id },
+        data: { status: 'ACTIVE', emailVerifiedAt: expect.any(Date) },
+      }),
+    );
+  });
+
   test('refresh revokes the old token and stores a replacement in the same family', async () => {
     const { service, prismaMocks, transaction } = dependencies();
     prismaMocks.refreshToken.findFirst.mockResolvedValue({

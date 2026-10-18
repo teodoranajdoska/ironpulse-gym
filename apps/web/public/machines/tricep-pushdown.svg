@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M260 90v250m280-250v250M245 90h310m-155 0v65" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="400" cy="175" r="24" fill="#e8f1e1"/><path d="M400 205v75m0-52-57 38m57-38 57 38m-114-4v62m114-62v62m-57-44-40 73m40-73 40 73" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="19"/>
+  <path d="M343 266h114" stroke="#b7ff39" stroke-linecap="round" stroke-width="10"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">TRICEPS PUSHDOWN</text>
+</svg>

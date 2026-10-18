@@ -186,10 +186,15 @@ export class AdminService {
     };
   }
 
-  async auditLog(input: { page?: string; pageSize?: string }) {
+  async auditLog(input: { page?: string; pageSize?: string; action?: string; entity?: string }) {
     const page = pagination(input);
+    const where: Prisma.AuditLogWhereInput = {
+      ...(input.action ? { action: { contains: input.action } } : {}),
+      ...(input.entity ? { entity: { contains: input.entity } } : {}),
+    };
     const [data, total] = await this.prisma.$transaction([
       this.prisma.auditLog.findMany({
+        where,
         include: {
           actor: { select: { id: true, profile: { select: { name: true } } } },
         },
@@ -197,7 +202,7 @@ export class AdminService {
         skip: page.skip,
         take: page.take,
       }),
-      this.prisma.auditLog.count(),
+      this.prisma.auditLog.count({ where }),
     ]);
     return paginated(data, total, page.page, page.pageSize);
   }

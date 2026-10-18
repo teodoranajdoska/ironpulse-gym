@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M250 95v245m300-245v245M235 95h330M290 122h220M310 122v54m180-54v54M300 340h200" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="400" cy="190" r="24" fill="#e8f1e1"/><path d="M400 220v76m0-52-57-75m57 75 57-75m-57 127-42 44m42-44 42 44M310 176h180" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="18"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">LAT PULLDOWN</text>
+</svg>

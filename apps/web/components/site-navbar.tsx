@@ -16,6 +16,7 @@ export function SiteNavbar(): JSX.Element {
   const t = useTranslations('nav');
   const pathname = usePathname();
   const { user, loading, logout } = useAuth();
+  const showMemberLinks = !loading && (!user || user.role === 'MEMBER');
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef<HTMLElement>(null);
@@ -82,6 +83,7 @@ export function SiteNavbar(): JSX.Element {
           <Link className="site-nav-link" href="/#zones">{t('spaces')}</Link>
           <Link className="site-nav-link" href="/#trainers">{t('coaches')}</Link>
           <Link className="site-nav-link" href="/#membership">{t('membership')}</Link>
+          {showMemberLinks && <><Link className="site-nav-link" href="/member/machines">{t('machines')}</Link><Link className="site-nav-link" href="/member/workouts">{t('workouts')}</Link></>}
           {!loading && user ? (
             <>
               <Link className="site-nav-link" href={dashboardPaths[user.role]}>
@@ -123,6 +125,7 @@ export function SiteNavbar(): JSX.Element {
           <Link href="/#zones" onClick={closeMenu}>{t('spaces')}</Link>
           <Link href="/#trainers" onClick={closeMenu}>{t('coaches')}</Link>
           <Link href="/#membership" onClick={closeMenu}>{t('membership')}</Link>
+          {showMemberLinks && <><Link href="/member/machines" onClick={closeMenu}>{t('machines')}</Link><Link href="/member/workouts" onClick={closeMenu}>{t('workouts')}</Link></>}
           {!loading && user ? (
             <>
               <Link href={dashboardPaths[user.role]} onClick={closeMenu}>{user.profile?.name ?? user.email}</Link>

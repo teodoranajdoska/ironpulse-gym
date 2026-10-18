@@ -4,6 +4,73 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { PrivacyService } from '../src/privacy/privacy.service';
 
 describe('privacy export and deletion', () => {
+  it('returns the member profile and persisted locale without exposing credentials', async () => {
+    const profile = {
+      id: 'member-id',
+      email: 'member@example.com',
+      locale: 'en',
+      profile: { name: 'Member', phone: null, birthDate: null, gender: null, heightCm: null, weightKg: null, avatarUrl: null },
+    };
+    const prismaMock = {
+      user: { findUnique: jest.fn().mockResolvedValue(profile) },
+    };
+    const service = new PrivacyService(prismaMock as unknown as PrismaService);
+
+    await expect(service.getProfile('member-id')).resolves.toEqual(profile);
+    expect(prismaMock.user.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'member-id' },
+      select: expect.objectContaining({ email: true, locale: true, profile: expect.any(Object) }),
+    }));
+  });
+
+  it('updates profile values and locale and returns the refreshed profile', async () => {
+    const updatedProfile = {
+      id: 'member-id',
+      email: 'member@example.com',
+      locale: 'en',
+      profile: {
+        name: 'Updated Name',
+        phone: '+38970000000',
+        birthDate: new Date('1990-01-02T00:00:00.000Z'),
+        gender: 'FEMALE',
+        heightCm: 168,
+        weightKg: 62,
+        avatarUrl: null,
+      },
+    };
+    const prismaMock = {
+      user: {
+        update: jest.fn().mockResolvedValue({ id: 'member-id', email: 'member@example.com', locale: 'en' }),
+        findUnique: jest.fn().mockResolvedValue(updatedProfile),
+      },
+      profile: {
+        upsert: jest.fn().mockResolvedValue(updatedProfile.profile),
+      },
+      $transaction: jest.fn(async (operations: Promise<unknown>[]) => Promise.all(operations)),
+    };
+    const service = new PrivacyService(prismaMock as unknown as PrismaService);
+
+    const result = await service.updateProfile('member-id', {
+      name: 'Updated Name',
+      phone: '+38970000000',
+      birthDate: '1990-01-02',
+      gender: 'FEMALE',
+      heightCm: 168,
+      weightKg: 62,
+      locale: 'en',
+    });
+
+    expect(result).toEqual(updatedProfile);
+    expect(prismaMock.user.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'member-id' },
+      data: { locale: 'en' },
+    }));
+    expect(prismaMock.profile.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 'member-id' },
+      update: expect.objectContaining({ birthDate: new Date('1990-01-02T00:00:00.000Z') }),
+    }));
+  });
+
   it('exports account data without password hashes or token records', async () => {
     const prismaMock = {
       user: { findUnique: jest.fn().mockResolvedValue({ id: 'member-id', email: 'member@example.com' }) },

@@ -118,3 +118,160 @@ Status is based on commands and smoke tests actually run in this environment.
 - Added safe local defaults and the API port, web URL, SMTP, mail, CORS, and client URL variables to the environment examples; startup validation now names missing/invalid keys and suggests copying `.env.example`.
 - Removed workspace `node_modules`, reinstalled with `pnpm install`, applied migrations, and seeded successfully from the moved `C:\Users\anton\Projects\MuscleBoost` path.
 - Verified API lint, typecheck, build, and all 31 API tests; `/health` and the web home returned HTTP 200. Browser smoke check showed 2 trainer cards, 6 machine cards, and 4 membership plans loaded from the API.
+
+## Phase 3D: auth, responsive review, and copy polish
+
+| Area | Status | Verification |
+|---|---|---|
+| Optional email verification | DONE | Both environment schemas/examples already default to `false`. New optional-mode registrations are verified and issued both session cookies without verification mail; required mode keeps the verification email/login gate. Successful login also activates a pending member account if the deployment has switched from required to optional mode. |
+| Auth test coverage | DONE | Unit/e2e coverage exercises required and optional registration, immediate session cookies, no verification token, unverified login behavior, and activation of a previously pending member when verification becomes optional. |
+| Responsive fixes | AUTOMATED WIDTH SWEEP DONE / MANUAL REVIEW REMAINS | Fixed undersized auth links, added safe-area spacing, made dashboard detail navigation a keyboard-operable full-screen mobile drawer, and constrained the mobile detail header title so it cannot overlap its menu button. Pinning/parallax are limited to fine pointers; touch swipe behavior remains and heavy imagery motion is reduced on touch layouts. Browser checks verified no header overlap at 360 and 390 px and covered public/auth/legal/404 plus the 23 MEMBER, TRAINER, ADMIN, and SPONSOR overview/detail routes at the six README widths. |
+| Content and placeholder handling | DONE | Improved bilingual gym rules, empty-state/CTA copy and Macedonian spelling. Seeded trainer bios and specialties and demo opening hours now render in the selected language; old seeded specialty values are localized too. Demo testimonials/statistics and sample sponsor/contact values are marked in code and shown with a development-only badge; demo statistics and example.com partners are not exposed as production content. |
+| i18n key parity | DONE | `pnpm check:i18n` reported matching `mk` and `en` catalogs (370 keys). |
+| Workspace lint/typecheck | DONE | Final `pnpm lint` and `pnpm typecheck` passed across shared, API, and web. |
+| Workspace tests and production build | DONE | Final `pnpm test` passed (55 tests: shared 2, web 15, API 38); `pnpm build` passed for shared, API, and web. |
+
+### Manual responsive review still required
+
+Use the README's F12 device-mode checklist for visual/touch review. The browser DOM sweep found no reproducible page overflow, clipped headings, or sub-44 px controls across the checked public/auth/legal/404 and authenticated routes. Seeded credentials worked for all four roles. Still inspect both locales and themes, reduced motion, real touch behavior, form keyboard behavior, safe areas/notch insets, image focal points, chart/table scrolling, and placeholder badges manually; the automated DOM checks do not constitute a full visual review.
+
+## Phase 4A: member dashboard
+
+| Area | Status | Verification |
+|---|---|---|
+| Member overview | DONE | Added live membership/expiry, appointment, latest-workout, weekly-workout and sponsor-offer summaries with loading, empty, and error states. |
+| Memberships | DONE | Added plan comparison, pending mock-payment requests, request feedback, and membership history/statuses. |
+| Workouts | DONE | Added membership-gated workout logging, set validation, history, per-exercise progress chart, and personal records. |
+| Machines and exercises | DONE | Added searchable/filterable machine library, member-only exercise details, numbered guidance, safety/mistake lists, and click-to-load YouTube privacy-enhanced embeds. Seed video IDs explicitly marked `TODO-replace` render as unavailable placeholders. |
+| Nutrition | DONE | Added validated multi-step questionnaire, calorie/macronutrient visualization, seven-day meal cards/day selection, plan status, regeneration quota handling, delete, print-only plan view, and visible non-medical-advice disclaimer. |
+| Trainers and appointments | DONE | Added trainer directory, future appointment requests, conflict handling, upcoming/past lists, cancellation, and localized statuses. |
+| Profile and privacy | DONE | Added shared-schema `GET/PATCH /me/profile` for profile/locale, GDPR export download, and password-confirmed account deletion warning. |
+| Sponsor tracking | DONE | Added offer strip/detail cards and impression/click tracking through existing throttled API endpoints. Repeated browser route sweeps reached the expected IP rate limit; offer pages continued rendering. |
+| Localization and tests | DONE | Added matching English/Macedonian member strings, including machine categories and muscle groups, and Vitest coverage for member helpers and shared request schemas. Final `pnpm check:i18n` reports 615 matching keys. |
+| Workspace checks | DONE | Final `pnpm lint`, `pnpm typecheck`, `pnpm test` (63 tests: shared 2, web 21, API 40), and `pnpm build` passed. |
+| Responsive browser sweep | AUTOMATED WIDTH SWEEP DONE / MANUAL REVIEW REMAINS | All ten member routes were checked at 360, 768, and 1280 px; no page-level horizontal overflow was found. Macedonian and English switching was checked previously. Manual visual review of keyboard/touch, theme, reduced motion, print output, and state-changing form flows remains. |
+| Documentation | DONE | README now documents member routes, seeded test accounts, quota/lock states, and reset precautions; HANDOFF and this progress report document the new profile API and verification. |
+
+### Phase 4A verification notes
+
+- Current-checkout revalidation (2026-10-18): `pnpm lint`, `pnpm typecheck`, `pnpm test` (82 tests: shared 2, web 32, API 48), `pnpm build`, and `pnpm check:i18n` (883 matching keys) all passed.
+- Final commands were run after the last code changes: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check:i18n`; all succeeded.
+- Browser DOM checks used the seeded member session on the alternate local web/API ports 3001/4001. No destructive form actions were submitted. Sponsor impression testing incremented local development analytics and reached the API's IP throttle during repeated route sweeps; run `pnpm db:reset` to restore seeded state before a fresh manual smoke test.
+- Seeded machine-video IDs are placeholders as required by the seed brief; real exercise videos must be supplied before publishing.
+- Nutrition plan meal names and some seeded partner descriptions come from the API/seed data and are not automatically translated by the member UI.
+- This automated check does not replace the README's full manual responsive/accessibility review.
+
+## Member API connectivity follow-up
+
+| Area | Status | Verification |
+|---|---|---|
+| Development CORS on alternate Next ports | DONE | API now accepts HTTP localhost/loopback origins on any port only in development; production continues enforcing the exact `CORS_ORIGINS` allow-list. CORS policy has three unit cases, and a live `OPTIONS` request from `http://localhost:3001` received the matching allow-origin header from the rebuilt API. |
+| Expired access-token recovery | DONE | Member GETs now share one refresh request after 401 and retry once after successful refresh. Vitest verifies concurrent requests use one refresh; existing CSRF cookie/header and credentialed requests are preserved. |
+| Transient data-load recovery | DONE | Safe GET/HEAD requests retry once on network `TypeError` or 502/503/504; terminal failures still surface to the existing loading/error/retry UI. Vitest verifies network retry and `credentials: include`. |
+| Seeded API/controller smoke test | DONE | Authenticated browser requests to `/auth/me`, memberships, workouts/history/records, nutrition plans, machines/detail/exercises, `/me/profile`, appointments, and sponsors returned HTTP 200 with expected JSON shapes and non-empty seeded list data where applicable. |
+| Browser route smoke test | DONE | Member overview and all portal sections loaded in MK at 360 px with no generic data-fetch error or horizontal document overflow; nutrition and workout forms rendered seeded data. |
+| Workspace verification | DONE | Focused auth/API-client tests (6) and CORS policy tests (3) passed; final `pnpm lint`, `pnpm typecheck`, `pnpm test` (68 total: shared 2, web 23, API 43), `pnpm build`, and `pnpm check:i18n` all passed. |
+
+The browser repro used port 3001 against a fresh API process on 4001. The previously running API process on port 4000 was not stopped or changed; before retesting against that already-running process, restart the API so it loads the current CORS policy and profile endpoint implementation. On the standard `pnpm dev` ports (web 3000/API 4000), production code keeps the existing explicit CORS allow-list behavior.
+
+## Phase 4B: trainer, admin, and sponsor dashboards
+
+| Area | Status | Verification |
+|---|---|---|
+| Trainer workspace | IMPLEMENTED | Added searchable assigned-client list/detail with profile, workout-volume chart/history and editable/approvable nutrition plans; appointment status/notes actions; weekly availability editor; bio/specialty/photo profile editor. |
+| Admin workspace | IMPLEMENTED | Added user search/role/status filters/pagination and account invitations; mock-payment confirm/reject; plan editor; machine/exercise CRUD; bilingual rule/settings editor; trial request status management; sponsor list/status/profile management; analytics and filtered audit log. |
+| Sponsor workspace | IMPLEMENTED | Added company profile editor, offer create/edit/delete and active status, aggregate counts, and daily impression/click chart. |
+| Responsive and state UX | IMPLEMENTED / MANUAL REVIEW REMAINS | Added localized loading skeletons, empty/error/retry states, live success/error feedback, desktop accessible tables with horizontal container overflow and mobile card layouts, and chart text alternatives. At 360px, all 20 trainer/admin/sponsor routes rendered without document overflow or generic load errors. Manual keyboard, theme, reduced-motion, and visual review remains. |
+| API support | IMPLEMENTED | Added assignment-guarded trainer client profile, admin plan/sponsor listings, audit action/entity filters, sponsor offer active state, and a Prisma migration. |
+| Localization/docs | IMPLEMENTED | Added matching English/Macedonian workspace strings and documented exact seeded role test accounts and reset precautions in README/HANDOFF. |
+| Required workspace verification | PASSED | After the final auth-client/test changes, `pnpm lint`, `pnpm typecheck`, `pnpm test` (74 tests: shared 2, web 24, API 48), `pnpm build`, and `pnpm check:i18n` all passed; the MK and EN catalogs match at 872 keys. |
+| Browser route smoke test | PASSED / MANUAL REVIEW REMAINS | Signed in as sponsor, trainer, and admin and loaded all 20 role routes at 360px; all had no page-level horizontal overflow or generic loading error. A fresh login after logout succeeded, exercising the CSRF token refresh path. No destructive CRUD actions were submitted. |
+| Visual/accessibility review | PARTIAL | Automated 360px route smoke checks passed. Full manual review of both locales/themes, keyboard and touch operation, reduced motion, chart/table interaction, and form state changes remains. |
+
+### Phase 4B verification notes
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check:i18n` were rerun after the last code edits; all passed.
+- Browser role checks used web port 3001 and a fresh API process on port 4001. The unrelated pre-existing API on port 4000 was left running and untouched.
+- Seeded role credentials and route-by-route smoke-test instructions are documented in the Phase 4B section of the README. Do not submit payment decisions, account status changes, or CRUD forms during a read-only smoke test.
+
+## Phase 4C: audit and fixes
+
+This section supersedes earlier route and smoke-test completion claims where this phase found a mismatch. `DONE` means the feature and its route/API wiring are present; the listed automated checks verify route rendering and responsive layout, not every possible business-state permutation. `PARTIAL` means a specific content/manual-verification gap remains; `STUB` identifies seeded placeholder content.
+
+### Route and link audit
+
+| Route group | Routes checked | Page implementation | Navigation |
+|---|---|---|---|
+| Public | `/`, `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/privacy`, `/terms` | Dedicated App Router pages; global `app/not-found.tsx` and `app/error.tsx` handle not-found/runtime errors. | Public navbar/footer and auth links; homepage in-page links target existing sections. |
+| Member | `/member`, `/member/membership`, `/member/nutrition`, `/member/workouts`, `/member/machines`, `/member/machines/:id`, `/member/trainers`, `/member/appointments`, `/member/sponsors`, `/member/profile` | Dedicated overview plus `app/[...dashboard]/page.tsx` for sections and machine detail. | Every sidebar route was clicked in Playwright; machine detail opens from its machine card. |
+| Trainer | `/trainer`, `/trainer/clients`, `/trainer/clients/:memberId`, `/trainer/appointments`, `/trainer/nutrition`, `/trainer/nutrition/:memberId`, `/trainer/availability`, `/trainer/profile` | Dedicated overview plus dashboard catch-all for section and client/plan detail routes. | Every sidebar route was clicked; overview cards and client nutrition links point to real detail routes. |
+| Admin | `/admin`, `/admin/users`, `/admin/memberships`, `/admin/machines`, `/admin/exercises`, `/admin/content`, `/admin/trials`, `/admin/sponsors`, `/admin/analytics`, `/admin/audit` | Dedicated overview plus dashboard catch-all. | Every sidebar route was clicked in Playwright. |
+| Sponsor | `/sponsor`, `/sponsor/offers`, `/sponsor/analytics`, `/sponsor/profile` | Dedicated overview plus dashboard catch-all. | Every sidebar route was clicked in Playwright. |
+
+The authenticated role-route test recorded browser console errors, uncaught page errors, and HTTP responses >=400 after sign-in. It asserted each page's main heading and absence of page error alerts. It also checked document overflow at 320, 350, 360, 390, 768, 1024, 1280, and 1536 px. This is a rendered-route audit, not a substitute for manually exercising every CRUD validation/error branch.
+
+### Phase 3D / 4A / 4B specification coverage
+
+| Feature | Status | Evidence / remaining scope |
+|---|---|---|
+| Phase 3D registration, verification modes, refresh/logout, recovery | DONE | Existing auth suites and manual auth instructions; role return-to-path now survives login and rejects unsafe destinations. |
+| Phase 3D i18n key parity | DONE | `pnpm check:i18n`: 876 matching keys in `mk` and `en`. |
+| Phase 3D responsive menus and page layout | DONE / MANUAL REVIEW REMAINS | Role and public navigation checked at 320/350/360/390; all role pages checked at the full width matrix. Notch/touch/visual/theme/reduced-motion review remains manual. |
+| Member overview and API data states | DONE | Role route smoke plus workspace loading/empty/error/retry UI. |
+| Membership request and mock-payment lifecycle | DONE | Real plan/membership/payment API wiring and admin queue; full payment decision flow was not submitted during this audit. |
+| Workout logging, history, progress chart, personal records | DONE | Real API wiring and member route smoke; the mutation was not submitted in the final E2E run. |
+| Machine search/filter and detail content / SVG animation slot | DONE | Active-member `/member/machines/leg-press` opened in E2E; description, muscles, steps, mistakes, safety, sets/reps and animation slot rendered. |
+| Machine YouTube embeds | STUB (seed data) | Click-to-load privacy-enhanced embed works only for a valid video ID. Seed values remain `TODO-replace`; there are no reviewed exercise-specific IDs, so the seeded records show unavailable-video copy instead of loading an embed. |
+| Inactive-member machine/exercise lock and upgrade prompt | PARTIAL | The membership-required panel links to `/member/membership`; the final browser suite did not sign in as an inactive member to assert this state. |
+| Nutrition questionnaire, calculations/results, charts, seven-day plan, print view | DONE | API-backed implementation with validation and fallback generation; member route smoke. Meal-name translation from API/seed content remains incomplete as noted above. |
+| Trainer directory and member appointment requests/conflicts | DONE | API-backed pages and error mapping; conflict path exists, but no conflicting request was submitted in this browser audit. |
+| Profile, GDPR export, account deletion | DONE / DESTRUCTIVE FLOW NOT RUN | Profile/export are implemented; deletion requires confirmation/password. Deletion was intentionally not performed against seeded accounts. |
+| Member sponsor offer strip and click/impression tracking | DONE | Uses API tracking endpoints. Repeated tracking is rate-limited by the API; no external-link conversion was asserted. |
+| Trainer overview, assigned clients and client details | DONE | Cards/rows now lead to client and appointment routes; client detail is assignment-guarded. Role-route E2E covered list routes. |
+| Trainer appointment actions and availability editor | DONE | Real mutation calls, pending states, cancellation confirmation, and retry/error states; mutation branches not all submitted in this audit. |
+| Trainer nutrition review/edit/approve | DONE | E2E navigated from nutrition list to seeded member plan, edited/saved, then saved and approved; status and APPROVED state were asserted. |
+| Trainer profile editor | DONE | Connected to trainer profile API; final route rendering was smoke-tested, but profile mutation was not submitted. |
+| Admin payment queue and membership-plan editor | DONE | API-backed queue/editor and confirmation prompts; decision/create/edit mutations were not submitted in the final E2E run. |
+| Admin users, machine/exercise CRUD, rules/settings, trial requests, sponsors | DONE | API-backed list/editor/actions and destructive confirmations; CRUD/status mutations were not submitted in this audit. |
+| Admin analytics and filtered audit log | DONE | API-backed sections loaded in the role-route E2E sweep. |
+| Sponsor dashboard, analytics, profile and offers CRUD | DONE | API-backed sections loaded; writes were not submitted in the final E2E run. |
+| Forms, loading/error/empty states and destructive confirmations | PARTIAL | Role pages expose states, mutation pending guards and confirmation prompts; exhaustive form-by-form validation/retry/destructive-action testing remains. |
+
+### Problems found and repaired
+
+- Member machine detail URLs were rejected by the dashboard catch-all and returned 404. The member detail route is now allowed and the active-member detail route is exercised in E2E.
+- Trainer overview cards/rows did not consistently navigate to useful detail routes; they now link to client and appointment sections. The review-plan list-to-detail edit/save/approve path is covered end to end.
+- Login discarded the protected destination. A validated same-origin `next` path is now retained; open redirects are rejected and unit-tested.
+- Seeded trainer photo URLs referenced nonexistent images; those seed values are now `null` rather than generating broken image requests.
+- Homepage had fabricated community statistics/testimonials, a hardcoded plan-price fallback, and a dead sponsor `#` fallback. Those misleading fallbacks were removed; demo-only opening-hours and partner fixtures remain explicitly marked in development.
+- Added the missing App Router SVG icon to avoid a missing icon request.
+- Several role mutation controls lacked pending guards or destructive confirmation; pending-state and confirmation handling was added across trainer, admin, sponsor, and member actions, with shared HTTP status error messaging.
+- Machine seed video IDs and seed partner/contact demo values are still explicitly marked placeholders. No external exercise videos were approved/verified as part of this audit.
+
+### Phase 4C verification
+
+| Check | Result |
+|---|---|
+| `pnpm lint` | PASS (shared, web, API) |
+| `pnpm typecheck` | PASS (shared, web, API) |
+| `pnpm test` | PASS (79 tests: shared 2, web 29, API 48) |
+| `pnpm build` | PASS (shared, API, web) |
+| `pnpm check:i18n` | PASS (876 matching message keys) |
+| Playwright E2E | PASS (6 tests: all 4 seeded roles through every sidebar route; role menus, guards, responsive widths; trainer nutrition review/edit/approve; active-member machine detail; public routes/navigation) |
+
+The Playwright run used `http://localhost:3002` and the current API on port 4001. A pre-existing API process on port 4000 was not stopped or modified. Tests used seeded `password123` accounts. Earlier E2E attempts exposed a consent-banner pointer interception and a test's incorrect Macedonian success-text matcher; the test now explicitly accepts consent before navigation and checks the actual localized copy. These were test setup/assertion failures, not application route failures.
+
+### Remaining limitations
+
+- Perform the README's manual F12/device-mode sweep at 320/350/360/390/768/1024/1280/1536 px, including both locales/themes, reduced motion, keyboard/touch behavior, safe-area insets, chart/table interactions, and real form states. Automated DOM dimensions do not verify visual polish or actual device behavior.
+- Replace `TODO-replace` machine video IDs with reviewed, exercise-appropriate IDs before expecting seeded video buttons to load a YouTube embed or publishing the library.
+- The E2E suite verifies all sidebar destinations and the requested trainer/machine flows, but does not submit every admin/member/sponsor CRUD action, destructive action, 409 conflict, or all validation branches. Those remain covered by implementation/API tests where applicable and should be manually checked with a resettable local database.
+- Production SMTP, live AI provider behavior, production TLS/cookie settings, and a scheduled midnight membership-expiry run were not exercised.
+
+## Phase 4A-FAST: member Machines and Workouts connections
+
+- [x] Machine detail actions open `/member/workouts` with the selected exercise prefilled; workout history and personal records link back to the machine guide.
+- [x] The member overview links the latest session to Workouts and its machine guide; dashboard labels identify Machines and Workouts.
+- [x] Public home machine cards link to their machine detail, and home/navbar member links target Machines and Workouts. Protected routes retain their destination through the login redirect.
+- [x] Existing membership gating, form validation, SVG animations, loading/error/empty states, and click-to-load YouTube embeds were retained.
+- [x] `pnpm typecheck` passed across shared, API, seed, and web workspaces. Tests were intentionally not run per the phase request.

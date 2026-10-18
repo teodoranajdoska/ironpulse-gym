@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M110 340h580M220 120v220m360-220v220M170 120h460" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="285" cy="142" r="27" fill="#b7ff39"/><path d="m285 178-32 72 58 34m-58-34 65-15 52 45m-105 4-34 78m80-78 20 78" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">BARBELL SQUAT</text>
+</svg>

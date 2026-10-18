@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M135 340h530M250 340V155h280v185M220 155h340M275 280h215M290 280l-30 60m210-60 30 60" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="415" cy="170" r="23" fill="#e8f1e1"/><path d="m415 198-20 62m20-42-92 20m92-20 73 28m-73 14-44 73m44-73 60 73M310 238h-95" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="18"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">SEATED ROW</text>
+</svg>

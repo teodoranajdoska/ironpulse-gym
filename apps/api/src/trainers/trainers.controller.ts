@@ -79,6 +79,17 @@ export class TrainersController {
     return this.trainers.removeClient(this.userId(user), memberId);
   }
 
+  @Get('me/clients/:memberId')
+  @Roles('TRAINER')
+  @ApiCookieAuth('ip_access')
+  @ApiOperation({ summary: 'View basic profile information for an assigned client' })
+  clientProfile(
+    @CurrentUser() user: AuthenticatedRequest['user'],
+    @Param('memberId') memberId: string,
+  ) {
+    return this.trainers.clientProfile(this.userId(user), memberId);
+  }
+
   @Get('me/clients/:memberId/workouts')
   @Roles('TRAINER')
   @ApiCookieAuth('ip_access')

@@ -21,3 +21,20 @@ export function dashboardForRoute(role: string, pathname: string): DashboardPath
   if (!dashboard) return null;
   return pathname === dashboard || pathname.startsWith(`${dashboard}/`) ? dashboard : null;
 }
+
+export function safeReturnTo(candidate: string | null, fallback: DashboardPath): string {
+  if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//') || candidate.includes('\\')) {
+    return fallback;
+  }
+  const target = new URL(candidate, 'http://ironpulse.local');
+  return target.origin === 'http://ironpulse.local'
+    ? `${target.pathname}${target.search}${target.hash}`
+    : fallback;
+}
+
+export function dashboardDetailAllowed(role: string, section: string): boolean {
+  return (
+    (role === 'MEMBER' && (section === 'machines' || section === 'exercises')) ||
+    (role === 'TRAINER' && (section === 'clients' || section === 'nutrition'))
+  );
+}

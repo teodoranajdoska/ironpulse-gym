@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M300 340h200m-160 0V215h120v125m-155-180v100m190-100v100m-190-100h-25m215 0h25" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="400" cy="160" r="24" fill="#e8f1e1"/><path d="M400 190v92m0-66-61-57m61 57 61-57m-61 123-40 61m40-61 40 61" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="19"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">SHOULDER PRESS</text>
+</svg>

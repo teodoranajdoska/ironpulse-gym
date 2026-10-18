@@ -21,7 +21,7 @@ export function CookieBanner(): JSX.Element | null {
   return (
     <aside
       aria-label={t('title')}
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 right-4 z-[80] flex flex-col gap-4 rounded-panel border border-line bg-surface p-5 shadow-2xl sm:left-auto sm:max-w-lg sm:flex-row sm:items-center"
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))] z-[80] flex flex-col gap-4 rounded-panel border border-line bg-surface p-5 shadow-2xl sm:left-auto sm:max-w-lg sm:flex-row sm:items-center"
     >
       <div className="flex-1">
         <h2 className="font-semibold text-foreground">{t('title')}</h2>

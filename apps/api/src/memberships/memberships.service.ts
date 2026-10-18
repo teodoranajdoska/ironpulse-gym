@@ -56,6 +56,19 @@ export class MembershipsService {
     return paginated(data, total, page.page, page.pageSize);
   }
 
+  async listAllPlans(input: { page?: string; pageSize?: string }) {
+    const page = pagination(input);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.membershipPlan.findMany({
+        orderBy: { durationMonths: 'asc' },
+        skip: page.skip,
+        take: page.take,
+      }),
+      this.prisma.membershipPlan.count(),
+    ]);
+    return paginated(data, total, page.page, page.pageSize);
+  }
+
   async getCurrent(userId: string) {
     const now = new Date();
     const membership = await this.prisma.membership.findFirst({

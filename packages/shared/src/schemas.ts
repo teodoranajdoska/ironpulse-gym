@@ -82,6 +82,32 @@ export const nutritionPlanSchema = z.object({
 });
 
 export const confirmPasswordSchema = z.object({ password: z.string().min(8) });
+export const membershipRequestSchema = z.object({ planId: z.string().min(1).max(100) });
+export const workoutLogSchema = z.object({
+  exerciseId: z.string().min(1),
+  performedAt: z.string().datetime().optional(),
+  sets: z.array(z.object({
+    reps: z.number().int().min(1).max(100),
+    weightKg: z.number().min(0).max(500),
+  })).min(1).max(20),
+});
+export const appointmentRequestSchema = z.object({
+  trainerId: z.string().min(1),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+}).refine((appointment) => new Date(appointment.endsAt) > new Date(appointment.startsAt), {
+  path: ['endsAt'],
+});
+export const memberProfileUpdateSchema = z.object({
+  name: z.string().trim().min(2).max(120).nullable().optional(),
+  phone: z.string().trim().max(40).nullable().optional(),
+  birthDate: z.string().date().nullable().optional(),
+  gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY']).nullable().optional(),
+  heightCm: z.number().int().min(120).max(250).nullable().optional(),
+  weightKg: z.number().min(35).max(350).nullable().optional(),
+  avatarUrl: z.string().url().nullable().optional(),
+  locale: z.enum(['mk', 'en']).optional(),
+});
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -91,3 +117,7 @@ export type User = z.infer<typeof userSchema>;
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type NutritionQuestionnaireInput = z.infer<typeof nutritionQuestionnaireSchema>;
 export type NutritionPlan = z.infer<typeof nutritionPlanSchema>;
+export type MembershipRequestInput = z.infer<typeof membershipRequestSchema>;
+export type WorkoutLogInput = z.infer<typeof workoutLogSchema>;
+export type AppointmentRequestInput = z.infer<typeof appointmentRequestSchema>;
+export type MemberProfileUpdateInput = z.infer<typeof memberProfileUpdateSchema>;

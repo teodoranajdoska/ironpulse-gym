@@ -164,15 +164,25 @@ export class AuthService {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
     const validPassword = await argon2.verify(user.passwordHash, input.password);
+    const verificationRequired = this.emailVerificationRequired();
     if (
       !validPassword ||
-      (this.emailVerificationRequired() && !user.emailVerifiedAt) ||
-      user.status !== 'ACTIVE'
+      (verificationRequired && (!user.emailVerifiedAt || user.status !== 'ACTIVE')) ||
+      (user.status !== 'ACTIVE' &&
+        (verificationRequired || user.role !== 'MEMBER' || user.status !== 'PENDING'))
     ) {
       throw new UnauthorizedException(INVALID_CREDENTIALS);
     }
 
-    const authUser = this.toAuthUser(user);
+    const authenticatedUser =
+      !verificationRequired && user.status === 'PENDING'
+        ? await this.prisma.user.update({
+            where: { id: user.id },
+            data: { status: 'ACTIVE', emailVerifiedAt: user.emailVerifiedAt ?? new Date() },
+            include: { profile: { select: { name: true } } },
+          })
+        : user;
+    const authUser = this.toAuthUser(authenticatedUser);
     return this.createSession(authUser, meta);
   }
 

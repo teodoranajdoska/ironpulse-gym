@@ -20,6 +20,7 @@ export const sponsorOfferSchema = z.object({
   description: z.string().trim().min(1).max(2000),
   discountCode: z.string().trim().min(1).max(80).nullable().optional(),
   validUntil: z.coerce.date().nullable().optional(),
+  isActive: z.boolean().default(true),
 });
 
 export const sponsorOfferUpdateSchema = sponsorOfferSchema.partial();

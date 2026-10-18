@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M280 340h240m-190 0V195h140v145" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="400" cy="125" r="25" fill="#e8f1e1"/><path d="M400 155v125m0-82-55 80m55-80 52-58m-52 58 55 80m-55 2-38 60m38-60 38 60" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="19"/>
+  <path d="M444 132v-36m-20 0h40m-20-12v12" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="9"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">BICEP CURL</text>
+</svg>

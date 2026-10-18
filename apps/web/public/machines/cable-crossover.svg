@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <rect width="800" height="450" rx="28" fill="#111711"/>
+  <path d="M150 95v245m500-245v245M135 95h30m500 0h-30M200 340h400M180 130l200 80m240-80-200 80" fill="none" stroke="#b7ff39" stroke-linecap="round" stroke-width="14"/>
+  <circle cx="400" cy="145" r="24" fill="#e8f1e1"/><path d="M400 175v96m0-70-73-32m73 32 73-32m-73 102-44 68m44-68 44 68" fill="none" stroke="#e8f1e1" stroke-linecap="round" stroke-width="19"/>
+  <path d="M205 181h24m342 0h24" stroke="#b7ff39" stroke-linecap="round" stroke-width="10"/>
+  <text x="400" y="405" fill="#b7ff39" font-family="Arial,sans-serif" font-size="25" text-anchor="middle">CABLE CROSSOVER</text>
+</svg>

@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ApiError, apiGet, apiPostParsed } from '@/lib/api-client';
 import { getMonthlyPrice, getSavingsPercentage } from '@/lib/pricing';
+import { localizedSeedCopy } from '@/lib/localized-copy';
 import type { ImageSlot } from '@/lib/images';
 
 const plansResponseSchema = z.object({
@@ -131,6 +132,30 @@ function trainerImageSlot(index: number): 'trainer-1' | 'trainer-2' | 'trainer-3
   return 'trainer-1';
 }
 
+function trainerCopy(value: string, locale: string): string {
+  return localizedSeedCopy(value, locale);
+}
+
+function trainerSpecialtyCopy(value: string, locale: string): string {
+  const knownSpecialties: Record<string, [string, string]> = {
+    'Силов тренинг': ['Силов тренинг', 'Strength training'],
+    'Strength training': ['Силов тренинг', 'Strength training'],
+    'Функционален тренинг': ['Функционален тренинг', 'Functional training'],
+    'Functional training': ['Функционален тренинг', 'Functional training'],
+    Mobility: ['Подвижност', 'Mobility'],
+    'Подвижност': ['Подвижност', 'Mobility'],
+    'Техника и прогресија': ['Техника и прогресија', 'Technique and progression'],
+    'Technique and progression': ['Техника и прогресија', 'Technique and progression'],
+    'Почетнички програми': ['Програми за почетници', 'Beginner programmes'],
+    'Програми за почетници': ['Програми за почетници', 'Beginner programmes'],
+    'Кондиција': ['Кондициски тренинг', 'Conditioning'],
+    Conditioning: ['Кондициски тренинг', 'Conditioning'],
+    'Индивидуално планирање': ['Индивидуално планирање', 'Individual planning'],
+    'Individual planning': ['Индивидуално планирање', 'Individual planning'],
+  };
+  return knownSpecialties[value]?.[locale === 'mk' ? 0 : 1] ?? trainerCopy(value, locale);
+}
+
 function machineImageSlot(category: string): 'cardio' | 'free-weights' | 'functional' | 'machines' {
   switch (category) {
     case 'CARDIO': return 'cardio';
@@ -224,7 +249,7 @@ export function HomeExperience({
   const [trialSuccess, setTrialSuccess] = useState(false);
   const [trialBusy, setTrialBusy] = useState(false);
   const [trackingError, setTrackingError] = useState(false);
-  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -236,19 +261,26 @@ export function HomeExperience({
 
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const desktopMotion = window.matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)');
     const connection = (
       navigator as Navigator & { connection?: EventTarget & { saveData?: boolean } }
     ).connection;
     const update = (): void => {
       setHeroVideoEnabled(
-        hasHeroVideo && !preference.matches && motionEnabled && !connection?.saveData,
+        hasHeroVideo &&
+          !preference.matches &&
+          motionEnabled &&
+          desktopMotion.matches &&
+          !connection?.saveData,
       );
     };
     update();
     preference.addEventListener('change', update);
+    desktopMotion.addEventListener('change', update);
     connection?.addEventListener('change', update);
     return () => {
       preference.removeEventListener('change', update);
+      desktopMotion.removeEventListener('change', update);
       connection?.removeEventListener('change', update);
     };
   }, [hasHeroVideo, motionEnabled]);
@@ -341,10 +373,18 @@ export function HomeExperience({
   }, [sponsors]);
 
   const openingHours = useMemo(
-    () => settings.find((setting) => setting.key === 'opening_hours')?.value,
-    [settings],
+    () => {
+      const value = settings.find((setting) => setting.key === 'opening_hours')?.value;
+      return value ? localizedSeedCopy(value, locale) : undefined;
+    },
+    [settings, locale],
   );
-  const oneMonthPrice = plans.find((plan) => plan.durationMonths === 1)?.priceMkd ?? 2000;
+  const displayOpeningHours =
+    isDevelopment || !openingHours?.startsWith('DEMO ·') ? openingHours : undefined;
+  const visibleSponsors = sponsors.filter(
+    (sponsor) => isDevelopment || !sponsor.websiteUrl?.includes('example.com'),
+  );
+  const oneMonthPrice = plans.find((plan) => plan.durationMonths === 1)?.priceMkd;
   const bestValuePlan = plans.reduce<Plan | undefined>((best, plan) => (
     !best || getMonthlyPrice(plan.priceMkd, plan.durationMonths) <
       getMonthlyPrice(best.priceMkd, best.durationMonths) ? plan : best
@@ -445,14 +485,8 @@ export function HomeExperience({
             <div className="hero-trust">
               <div>
                 <span className="trust-label">{t('openingHours')}</span>
-                <strong>{openingHours ?? (resourceErrors.settings ? t('notAvailable') : t('loadingValue'))}</strong>
-                {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('placeholderBadge')}</span>}
-              </div>
-              <span aria-hidden="true" className="trust-divider" />
-              <div>
-                <span className="trust-label">{t('community')}</span>
-                <strong>{t('heroPlaceholderStat')}</strong>
-                {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('placeholderBadge')}</span>}
+                <strong>{displayOpeningHours ?? (dataLoading && !resourceErrors.settings ? t('loadingValue') : t('notAvailable'))}</strong>
+                {isDevelopment && openingHours?.startsWith('DEMO ·') && <span className="dev-placeholder-badge">{t('placeholderBadge')}</span>}
               </div>
             </div>
           </div>
@@ -560,7 +594,7 @@ export function HomeExperience({
                 <div>
                   <h3>{t(`platformStep${step + 1}Title` as 'platformStep1Title')}</h3>
                   <p>{t(`platformStep${step + 1}Copy` as 'platformStep1Copy')}</p>
-                  <Link href={['/#membership', '/register', '/member/exercises', '/register'][step] as Route}>
+                  <Link href={['/#membership', '/register', '/member/machines', '/register'][step] as Route}>
                     {t('platformStepLink')}<ArrowUpRight aria-hidden="true" size={14} />
                   </Link>
                 </div>
@@ -584,7 +618,10 @@ export function HomeExperience({
             <p className="eyebrow">{t('machinesEyebrow')}</p>
             <h2 className="display-font section-title" id="machines-title">{t('machinesTitle')}</h2>
           </div>
-          <Link className="text-link" href="/member/exercises">{t('machineLibraryLink')}<ArrowUpRight aria-hidden="true" size={16} /></Link>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <Link className="text-link" href="/member/machines">{t('machineLibraryLink')}<ArrowUpRight aria-hidden="true" size={16} /></Link>
+            <Link className="text-link" href="/member/workouts">{t('workoutsLink')}<ArrowUpRight aria-hidden="true" size={16} /></Link>
+          </div>
         </div>
         {resourceErrors.machines ? (
           <p className="data-message" role="status">{t('machinesUnavailable')}</p>
@@ -613,7 +650,7 @@ export function HomeExperience({
                 <div className="machine-card__body">
                   <p className="eyebrow">{categoryText(machine.category, t)}</p>
                   <h3>{machine.name}</h3>
-                  <Link aria-label={`${t('machineLibraryLink')}: ${machine.name}`} href="/member/exercises">
+                  <Link aria-label={`${t('machineLibraryLink')}: ${machine.name}`} href={`/member/machines/${encodeURIComponent(machine.slug)}`}>
                     {t('learnMachine')}<ArrowUpRight aria-hidden="true" size={15} />
                   </Link>
                 </div>
@@ -652,8 +689,11 @@ export function HomeExperience({
                   />
                   <div className="trainer-card__info">
                     <h3 className="display-font">{trainer.name ?? t('trainerNamePending')}</h3>
-                    <p>{trainer.specialties.length ? trainer.specialties.join(' · ') : t('trainerSpecialtyPending')}</p>
-                    <p className="trainer-card__bio">{trainer.bio ?? t('trainerBioPending')}</p>
+                    <p>{trainer.specialties.length
+                      ? [...new Set(trainer.specialties.map((specialty) => trainerSpecialtyCopy(specialty, locale)))]
+                        .join(' · ')
+                      : t('trainerSpecialtyPending')}</p>
+                    <p className="trainer-card__bio">{trainer.bio ? trainerCopy(trainer.bio, locale) : t('trainerBioPending')}</p>
                     <Link className="text-link" href="/register">{t('bookSession')}<ArrowUpRight aria-hidden="true" size={15} /></Link>
                   </div>
                 </article>
@@ -688,17 +728,6 @@ export function HomeExperience({
           <div className="community-copy">
             <p className="eyebrow">{t('communityEyebrow')}</p>
             <h2 className="display-font section-title" id="community-title">{t('communityTitle')}</h2>
-            <div aria-live="polite" className="testimonial-card">
-              {process.env.NODE_ENV === 'development' && <span className="dev-placeholder-badge">{t('placeholderBadge')}</span>}
-              {/* PLACEHOLDER testimonial content; replace with approved member quotes before publishing. */}
-              <p className="testimonial-card__quote">{t(`testimonial${testimonialIndex + 1}` as 'testimonial1')}</p>
-              <p className="testimonial-card__label">{t('testimonialPlaceholder')}</p>
-              <div className="testimonial-controls">
-                <button aria-label={t('previousTestimonial')} onClick={() => setTestimonialIndex((testimonialIndex + 2) % 3)} type="button">←</button>
-                <span>0{testimonialIndex + 1} / 03</span>
-                <button aria-label={t('nextTestimonial')} onClick={() => setTestimonialIndex((testimonialIndex + 1) % 3)} type="button">→</button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -718,7 +747,9 @@ export function HomeExperience({
         ) : (
           <div className="plans-grid">
             {plans.slice().sort((first, second) => first.durationMonths - second.durationMonths).map((plan) => {
-              const savings = getSavingsPercentage(plan.priceMkd, plan.durationMonths, oneMonthPrice);
+              const savings = oneMonthPrice
+                ? getSavingsPercentage(plan.priceMkd, plan.durationMonths, oneMonthPrice)
+                : 0;
               const isBestValue = plan.id === bestValuePlan?.id;
               return (
                 <article className={`plan-card${isBestValue ? ' plan-card--best' : ''}`} key={plan.id}>
@@ -759,22 +790,25 @@ export function HomeExperience({
             <p className="data-message" role="status">{t('loadingValue')}</p>
           ) : resourceErrors.sponsors ? (
             <p className="data-message" role="status">{t('sponsorsUnavailable')}</p>
-          ) : sponsors.length === 0 ? (
+          ) : visibleSponsors.length === 0 ? (
             <p className="data-message" role="status">{t('sponsorsEmpty')}</p>
           ) : (
             <div aria-label={t('sponsorsTitle')} className="sponsor-marquee">
               <div className="sponsor-track">
-                {[...sponsors, ...sponsors].map((sponsor, index) => (
-                  <article className="sponsor-item" data-sponsor-id={index < sponsors.length ? sponsor.id : undefined} key={`${sponsor.id}-${index}`}>
+                {[...visibleSponsors, ...visibleSponsors].map((sponsor, index) => (
+                  <article className="sponsor-item" data-sponsor-id={index < visibleSponsors.length ? sponsor.id : undefined} key={`${sponsor.id}-${index}`}>
+                    {isDevelopment && sponsor.websiteUrl?.includes('example.com') && (
+                      <span className="dev-placeholder-badge">{t('placeholderBadge')}</span>
+                    )}
                     {sponsor.logoUrl ? (
                       <span className="sponsor-item__logo">{sponsor.companyName}</span>
                     ) : (
                       <span className="display-font sponsor-item__name">{sponsor.companyName}</span>
                     )}
-                    {sponsor.offers.slice(0, 1).map((offer) => (
+                    {sponsor.offers.slice(0, 1).map((offer) => sponsor.websiteUrl ? (
                       <a
                         className="sponsor-item__offer"
-                        href={sponsor.websiteUrl ?? '#sponsors'}
+                        href={sponsor.websiteUrl}
                         key={offer.id}
                         onClick={() => trackOfferClick(offer.id)}
                         rel="noreferrer"
@@ -782,6 +816,8 @@ export function HomeExperience({
                       >
                         {offer.title}<MoveUpRight aria-hidden="true" size={13} />
                       </a>
+                    ) : (
+                      <span className="sponsor-item__offer" key={offer.id}>{offer.title}</span>
                     ))}
                   </article>
                 ))}

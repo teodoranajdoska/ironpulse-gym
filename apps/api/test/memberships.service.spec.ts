@@ -4,6 +4,29 @@ import { MembershipsService, membershipPeriod } from '../src/memberships/members
 import { MockPaymentProvider } from '../src/memberships/payment-provider';
 
 describe('MembershipsService', () => {
+  test('admin plan listing includes inactive plans', async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const count = jest.fn().mockResolvedValue(0);
+    const prisma = {
+      membershipPlan: { findMany, count },
+      $transaction: jest.fn().mockImplementation((queries: unknown[]) => Promise.all(queries)),
+    };
+    const service = new MembershipsService(
+      prisma as unknown as PrismaService,
+      {} as never,
+      new MockPaymentProvider(),
+    );
+
+    await expect(service.listAllPlans({})).resolves.toMatchObject({
+      data: [],
+      pagination: { page: 1, pageSize: 20, total: 0 },
+    });
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
+      orderBy: { durationMonths: 'asc' },
+    }));
+    expect(findMany.mock.calls[0]?.[0]).not.toHaveProperty('where');
+  });
+
   test('extends a membership from the existing future end date', () => {
     const now = new Date('2026-10-12T10:00:00.000Z');
     const previousEnd = new Date('2026-11-30T10:00:00.000Z');

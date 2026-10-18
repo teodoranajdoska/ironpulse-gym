@@ -81,6 +81,14 @@ export class MembershipsController {
     return this.memberships.listPending({ page, pageSize });
   }
 
+  @Get('admin/plans')
+  @Roles('ADMIN')
+  @ApiCookieAuth('ip_access')
+  @ApiOperation({ summary: 'List all membership plans, including inactive plans' })
+  adminPlans(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.memberships.listAllPlans({ page, pageSize });
+  }
+
   @Post('admin/:id/confirm')
   @Roles('ADMIN')
   @ApiCookieAuth('ip_access')

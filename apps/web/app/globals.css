@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+@media print {
+  body::after {
+    display: none;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .member-print-area,
+  .member-print-area * {
+    visibility: visible;
+  }
+
+  .member-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    color: #111;
+    background: #fff;
+  }
+
+  .member-print-area .print\:hidden {
+    display: none !important;
+  }
+
+  @page {
+    margin: 16mm;
+  }
+}
+
 :root,
 [data-theme='dark'] {
   color-scheme: dark;
@@ -87,6 +118,64 @@ input {
 
 .page-enter {
   animation: page-enter 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.machine-animation__moving-part {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: machine-rep 1.8s ease-in-out infinite alternate;
+}
+
+.machine-animation[data-motion='cardio'] .machine-animation__moving-part {
+  animation-name: machine-cycle;
+}
+
+.machine-animation[data-motion='push'] .machine-animation__moving-part {
+  animation-name: machine-push;
+}
+
+.machine-animation[data-motion='pull'] .machine-animation__moving-part {
+  animation-name: machine-pull;
+}
+
+.machine-animation[data-motion='legs'] .machine-animation__moving-part {
+  animation-name: machine-legs;
+}
+
+@keyframes machine-rep {
+  to {
+    transform: translateY(3px);
+  }
+}
+
+@keyframes machine-cycle {
+  to {
+    transform: translateY(2px) rotate(3deg);
+  }
+}
+
+@keyframes machine-push {
+  to {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes machine-pull {
+  to {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes machine-legs {
+  to {
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .machine-animation__moving-part {
+    animation: none;
+  }
 }
 
 /* Keep the page wrapper untransformed so ScrollTrigger can pin sections to the viewport. */
@@ -755,8 +844,7 @@ summary {
 }
 
 .platform-visual {
-  position: sticky;
-  top: 15vh;
+  position: relative;
   display: grid;
   min-height: 25rem;
   align-content: center;
@@ -1483,6 +1571,7 @@ summary {
 
 .sponsor-item__offer {
   display: inline-flex;
+  min-height: 2.75rem;
   align-items: center;
   gap: 0.35rem;
   color: var(--accent-readable);
@@ -1742,8 +1831,10 @@ summary {
 .site-nav-link,
 .site-login-link {
   display: inline-flex;
+  min-width: 2.75rem;
   min-height: 2.75rem;
   align-items: center;
+  justify-content: center;
   transition: color 180ms ease;
 }
 
@@ -1797,13 +1888,16 @@ summary {
   max-height: 100dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: calc(6rem + env(safe-area-inset-top)) 1.5rem calc(2rem + env(safe-area-inset-bottom));
+  padding: calc(6rem + env(safe-area-inset-top))
+    max(1.5rem, env(safe-area-inset-right))
+    calc(2rem + env(safe-area-inset-bottom))
+    max(1.5rem, env(safe-area-inset-left));
   background: var(--background);
 }
 
 .site-mobile-menu__close {
   position: absolute;
-  top: 1.25rem;
+  top: calc(1.25rem + env(safe-area-inset-top));
   right: 1.25rem;
   display: grid;
   width: 2.75rem;
@@ -1821,6 +1915,16 @@ summary {
   border-bottom: 1px solid var(--line);
   font-family: var(--font-display), sans-serif;
   font-size: 2rem;
+  text-transform: uppercase;
+}
+
+.site-mobile-menu > button:not(.site-mobile-menu__close) {
+  min-height: 2.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display), sans-serif;
+  font-size: 2rem;
+  text-align: left;
   text-transform: uppercase;
 }
 
@@ -1999,8 +2103,18 @@ summary {
   border-radius: 1.5rem;
 }
 
+.auth-layout__form .auth-card a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+}
+
 .dashboard-shell {
   padding-top: 7.5rem;
+}
+
+.first-week__intro .section-title {
+  font-size: clamp(2.4rem, 5vw, 4.8rem);
 }
 
 .legal-page {
@@ -2133,21 +2247,11 @@ summary {
     min-height: min(72vh, 45rem);
   }
 
-  .zones-track {
-    overflow: visible;
-    scroll-snap-type: none;
-  }
-
   .zones-instruction {
     opacity: 0.7;
   }
 
-  .platform-story {
-    grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.8fr);
-  }
-
   .platform-visual {
-    top: 12vh;
     min-height: 80vh;
   }
 
@@ -2201,6 +2305,22 @@ summary {
 
   .auth-layout__photo {
     display: block;
+  }
+}
+
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+  .zones-track {
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .platform-story {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.8fr);
+  }
+
+  .platform-visual {
+    position: sticky;
+    top: 12vh;
   }
 }
 
@@ -2300,6 +2420,8 @@ summary {
   .site-header__inner {
     min-height: 4.75rem;
     padding-top: 0.25rem;
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-left: max(0px, env(safe-area-inset-left));
   }
 
   .site-mobile-menu__actions {
