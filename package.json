@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @ironpulse/shared build && pnpm --parallel --filter api --filter web dev",
     "build": "pnpm -r build",
+    "start": "pnpm --parallel --filter api --filter web start",
     "typecheck": "pnpm --filter @ironpulse/shared build && pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
