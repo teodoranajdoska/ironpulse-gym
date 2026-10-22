@@ -1177,6 +1177,12 @@ summary {
 
 .trainer-card__portrait {
   min-height: 22rem;
+  aspect-ratio: 4 / 5;
+}
+
+.trainer-card__avatar svg {
+  z-index: 1;
+  color: var(--accent);
 }
 
 .trainer-card__info {
@@ -1991,7 +1997,13 @@ summary {
 }
 
 .site-footer__contact a,
-.site-footer__links a {
+.site-footer__links a,
+.site-footer__links button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
   display: inline-flex;
   min-height: 2.75rem;
   min-width: 2.75rem;
@@ -2017,6 +2029,12 @@ summary {
 
 .site-footer__links h2 {
   flex-basis: 100%;
+}
+
+.site-footer__link-groups {
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
 }
 
 .site-footer__bottom {

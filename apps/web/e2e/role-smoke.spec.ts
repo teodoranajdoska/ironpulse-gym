@@ -53,7 +53,12 @@ async function completeSignIn(page: Page, account: { slug: string; role: string;
 }
 
 async function dismissCookieConsent(page: Page): Promise<void> {
-  const consentButton = page.locator('aside[aria-label="Твојата приватност е важна"] button');
+  await page.waitForFunction(
+    () =>
+      document.cookie.split('; ').some((cookie) => cookie.startsWith('user_consent=')) ||
+      document.querySelector('#cookie-title') !== null,
+  );
+  const consentButton = page.locator('aside[aria-labelledby="cookie-title"] button').first();
   if (await consentButton.isVisible()) await consentButton.click();
 }
 

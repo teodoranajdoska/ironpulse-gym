@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useLocale } from 'next-intl';
 
 export function CountUp({
   value,
@@ -9,6 +10,7 @@ export function CountUp({
   value: number;
   suffix?: string;
 }): JSX.Element {
+  const locale = useLocale();
   const ref = useRef<HTMLSpanElement>(null);
   const [display, setDisplay] = useState(0);
 
@@ -48,5 +50,9 @@ export function CountUp({
     };
   }, [value]);
 
-  return <span ref={ref}>{display.toLocaleString()} {suffix}</span>;
+  return (
+    <span ref={ref}>
+      {new Intl.NumberFormat(locale === 'mk' ? 'mk-MK' : 'en-GB').format(display)} {suffix}
+    </span>
+  );
 }

@@ -1,28 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 export function LanguageSwitch({ id = 'language-switch' }: { id?: string }): JSX.Element {
   const t = useTranslations('nav');
+  const locale = useLocale();
   const router = useRouter();
-  const [locale, setLocale] = useState('mk');
-
-  useEffect(() => {
-    setLocale(document.documentElement.lang === 'en' ? 'en' : 'mk');
-    const syncLocale = (event: Event): void => {
-      const selected = (event as CustomEvent<string>).detail;
-      if (selected === 'mk' || selected === 'en') setLocale(selected);
-    };
-    window.addEventListener('ironpulse-locale-change', syncLocale);
-    return () => window.removeEventListener('ironpulse-locale-change', syncLocale);
-  }, []);
 
   function changeLocale(next: string): void {
+    if (next !== 'mk' && next !== 'en') return;
     document.cookie = `ip_locale=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
-    setLocale(next);
-    window.dispatchEvent(new CustomEvent('ironpulse-locale-change', { detail: next }));
     router.refresh();
   }
 

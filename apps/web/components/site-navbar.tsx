@@ -2,6 +2,7 @@
 
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
+import type { Route } from 'next';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
@@ -76,30 +77,63 @@ export function SiteNavbar(): JSX.Element {
   return (
     <header className={`site-header ${solid ? 'is-solid' : 'is-transparent'}`}>
       <div className="page-width site-header__inner">
-        <Link aria-label={APP_NAME} className="site-brand display-font" href="/" onClick={closeMenu}>
-          {APP_NAME}<span>.</span>
+        <Link
+          aria-label={APP_NAME}
+          className="site-brand display-font"
+          href="/"
+          onClick={closeMenu}
+        >
+          {APP_NAME}
+          <span>.</span>
         </Link>
         <nav aria-label={t('label')} className="site-nav hidden md:flex">
-          <Link className="site-nav-link" href="/#zones">{t('spaces')}</Link>
-          <Link className="site-nav-link" href="/#trainers">{t('coaches')}</Link>
-          <Link className="site-nav-link" href="/#membership">{t('membership')}</Link>
-          {showMemberLinks && <><Link className="site-nav-link" href="/member/machines">{t('machines')}</Link><Link className="site-nav-link" href="/member/workouts">{t('workouts')}</Link></>}
+          <Link className="site-nav-link" href="/#zones">
+            {t('services')}
+          </Link>
+          <Link className="site-nav-link" href="/#trainers">
+            {t('team')}
+          </Link>
+          <Link className="site-nav-link" href="/#membership">
+            {t('membership')}
+          </Link>
+          <Link className="site-nav-link" href={'/blog' as Route}>
+            {t('blog')}
+          </Link>
+          <Link className="site-nav-link" href="/contact">
+            {t('contact')}
+          </Link>
+          {showMemberLinks && (
+            <>
+              <Link className="site-nav-link" href="/member/machines">
+                {t('machines')}
+              </Link>
+              <Link className="site-nav-link" href="/member/workouts">
+                {t('workouts')}
+              </Link>
+            </>
+          )}
           {!loading && user ? (
             <>
               <Link className="site-nav-link" href={dashboardPaths[user.role]}>
                 {user.profile?.name ?? user.email}
               </Link>
-              <button className="site-login-link" onClick={() => void signOut()} type="button">{t('logout')}</button>
+              <button className="site-login-link" onClick={() => void signOut()} type="button">
+                {t('logout')}
+              </button>
             </>
           ) : (
-            <Link className="site-login-link" href="/login">{t('login')}</Link>
+            <Link className="site-login-link" href="/login">
+              {t('login')}
+            </Link>
           )}
         </nav>
         <div className="site-header__actions hidden md:flex">
           <LanguageSwitch id="language-switch-nav" />
           <ThemeToggle />
           {!loading && !user && (
-            <Button asChild size="sm"><a href="/#trial">{t('freeTrial')}</a></Button>
+            <Button asChild size="sm">
+              <a href="/#trial">{t('freeTrial')}</a>
+            </Button>
           )}
         </div>
         <div className="site-header__actions flex md:hidden">
@@ -118,25 +152,70 @@ export function SiteNavbar(): JSX.Element {
         </div>
       </div>
       {open && (
-        <nav aria-label={t('label')} aria-modal="true" className="site-mobile-menu flex md:hidden" id="mobile-navigation" ref={menuRef} role="dialog">
-          <button aria-label={t('closeMenu')} className="site-mobile-menu__close" onClick={closeMenu} type="button">
+        <nav
+          aria-label={t('label')}
+          aria-modal="true"
+          className="site-mobile-menu flex md:hidden"
+          id="mobile-navigation"
+          ref={menuRef}
+          role="dialog"
+        >
+          <button
+            aria-label={t('closeMenu')}
+            className="site-mobile-menu__close"
+            onClick={closeMenu}
+            type="button"
+          >
             <X aria-hidden="true" size={20} />
           </button>
-          <Link href="/#zones" onClick={closeMenu}>{t('spaces')}</Link>
-          <Link href="/#trainers" onClick={closeMenu}>{t('coaches')}</Link>
-          <Link href="/#membership" onClick={closeMenu}>{t('membership')}</Link>
-          {showMemberLinks && <><Link href="/member/machines" onClick={closeMenu}>{t('machines')}</Link><Link href="/member/workouts" onClick={closeMenu}>{t('workouts')}</Link></>}
+          <Link href="/#zones" onClick={closeMenu}>
+            {t('services')}
+          </Link>
+          <Link href="/#trainers" onClick={closeMenu}>
+            {t('team')}
+          </Link>
+          <Link href="/#membership" onClick={closeMenu}>
+            {t('membership')}
+          </Link>
+          <Link href={'/blog' as Route} onClick={closeMenu}>
+            {t('blog')}
+          </Link>
+          <Link href="/contact" onClick={closeMenu}>
+            {t('contact')}
+          </Link>
+          {showMemberLinks && (
+            <>
+              <Link href="/member/machines" onClick={closeMenu}>
+                {t('machines')}
+              </Link>
+              <Link href="/member/workouts" onClick={closeMenu}>
+                {t('workouts')}
+              </Link>
+            </>
+          )}
           {!loading && user ? (
             <>
-              <Link href={dashboardPaths[user.role]} onClick={closeMenu}>{user.profile?.name ?? user.email}</Link>
-              <button className="text-left" onClick={() => void signOut()} type="button">{t('logout')}</button>
+              <Link href={dashboardPaths[user.role]} onClick={closeMenu}>
+                {user.profile?.name ?? user.email}
+              </Link>
+              <button className="text-left" onClick={() => void signOut()} type="button">
+                {t('logout')}
+              </button>
             </>
           ) : (
-            <Link href="/login" onClick={closeMenu}>{t('login')}</Link>
+            <Link href="/login" onClick={closeMenu}>
+              {t('login')}
+            </Link>
           )}
           <div className="site-mobile-menu__actions">
             <LanguageSwitch id="language-switch-mobile" />
-            {!loading && !user && <Button asChild><a href="/#trial" onClick={closeMenu}>{t('freeTrial')}</a></Button>}
+            {!loading && !user && (
+              <Button asChild>
+                <a href="/#trial" onClick={closeMenu}>
+                  {t('freeTrial')}
+                </a>
+              </Button>
+            )}
           </div>
         </nav>
       )}

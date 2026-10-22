@@ -275,3 +275,63 @@ The Playwright run used `http://localhost:3002` and the current API on port 4001
 - [x] Public home machine cards link to their machine detail, and home/navbar member links target Machines and Workouts. Protected routes retain their destination through the login redirect.
 - [x] Existing membership gating, form validation, SVG animations, loading/error/empty states, and click-to-load YouTube embeds were retained.
 - [x] `pnpm typecheck` passed across shared, API, seed, and web workspaces. Tests were intentionally not run per the phase request.
+
+## Public presentation Phase 1: home, team, services, and navigation
+
+| Area | Status | Verification |
+|---|---|---|
+| Home hero, mission, highlights, services, and membership plans | ALREADY IMPLEMENTED | Existing API-backed homepage includes the hero/CTA, mission, four highlight cards, training features, and membership cards with benefits and registration CTAs; retained without redesign. |
+| Trainer directory | COMPLETED | Public `/trainers` API data now includes `photoUrl` in the web response schema and uses available profile photos. Missing or failed photos display an accessible avatar fallback. The API currently exposes trainers only, not general employees. |
+| Header and footer navigation | COMPLETED / PARTIAL | Team and Services links target existing homepage sections; Home and Contact target existing home/footer content. Blog links target `/blog`, which remains unimplemented for Phase 2; no placeholder route was added. |
+| Web quality checks | PASSED | `pnpm --filter web lint`, `pnpm --filter web typecheck`, `pnpm --filter web test` (34 tests), `pnpm --filter web build`, and `pnpm check:i18n` (886 matching keys) passed. |
+| Responsive browser review | PASSED | Live page checked at 360px and 1280px with no horizontal document overflow. Trainer and pricing cards rendered at both widths; null and failed trainer photos showed avatar fallbacks, and a supplied local image loaded. |
+
+## Public presentation Phase 2: blog, contact, and trainer profiles
+
+| Area | Status | Verification |
+|---|---|---|
+| Blog/news list and category filters | IMPLEMENTED / LOCAL FALLBACK | Added localized sample articles, image/title/excerpt/date/category cards, accessible category links reflected in `?category=`, a deliberate empty Nutrition category, and a visible local-content notice because no posts API/model exists. |
+| Blog article details and states | IMPLEMENTED | Added dynamic slug pages with full localized article text, back links, loading skeletons, retry error boundary, and the existing site not-found page for unknown slugs. |
+| Contact page and form | IMPLEMENTED / SUBMISSION API MISSING | Added all requested fields, Zod validation and inline accessible errors, pending/double-submit guards, reset and success-toast behavior, and error-toast behavior. `GET /content/settings` supplies the context block; the contact form calls an isolated frontend service for the missing `POST /content/contact-messages` contract. |
+| Public trainer profile details | IMPLEMENTED | Added dynamic profiles using the existing public trainer list API, loading/error/not-found states, and profile links from homepage and member trainer cards. No API detail endpoint was added. |
+| Shared feedback | IMPLEMENTED / REUSED | Reused existing skeleton and empty-state components and added a global accessible toast provider. |
+| Localization and web checks | PASSED | English and Macedonian catalogs match at 966 keys. Web lint, type-check, production build, and all 37 Vitest tests passed. |
+| Browser smoke/responsive checks | PASSED | Tested all category controls, URL persistence after reload, the empty category, valid and invalid detail navigation, invalid/valid form paths and mocked success reset, actual API failure toast, and 360px/1280px layouts without horizontal overflow. |
+
+### Phase 2 limitations
+
+- The API has no blog/news/category model or listing/detail endpoints; the blog intentionally uses clearly labeled local fallback data.
+- The API has no contact-message endpoint. A valid form submission reaches the frontend service and receives the expected unavailable/error toast from the current API; the success/reset branch was exercised with a mocked successful response. Backend work was intentionally not made.
+- Seeded address, phone, email, and hours are marked demo-only by the existing seed. The page hides these values outside development rather than presenting them as real gym details; approved contact details still need to be supplied.
+- The existing public trainer endpoint is list-only, so profile detail pages locate IDs from its paginated list. Add an API detail endpoint if the trainer directory grows beyond the current page size.
+- Unknown dynamic post/trainer routes render the localized site 404 page through Next.js `notFound()`. The production browser streamed these not-found pages with HTTP 200, consistent with App Router streaming behavior; status-code handling may need a non-streaming route strategy if strict HTTP 404 responses are required.
+
+## Phase 3: presentation audit, localization, consent, and responsive QA
+
+### Audit checklist
+
+- [x] Existing and retained: App Router with `next-intl`, Macedonian and English message catalogs, cookie-persisted `ip_locale`, and `<html lang>` from the active locale (`apps/web/i18n/request.ts`, `apps/web/app/layout.tsx`, and `apps/web/messages/{mk,en}.json`).
+- [x] Existing and retained: accessible MK/EN language selectors in desktop/mobile navigation and footer (`apps/web/components/language-switch.tsx`, `apps/web/components/site-navbar.tsx`, `apps/web/components/site-footer.tsx`).
+- [x] Existing and retained: translated home, team, services, blog, contact, authentication, legal, and role-workspace UI, including form errors, notifications, and loading/empty/error states.
+- [x] Existing and retained: responsive navigation drawer, keyboard handling, safe-area support, and responsive role workspaces (`apps/web/components/site-navbar.tsx`, `apps/web/components/role-dashboard.tsx`, `apps/web/app/globals.css`).
+- [x] Completed gap: consent was localStorage-only and offered no rejection choice. It now reads/writes `user_consent=accepted|rejected` for one year, stays hidden after either choice, returns after cookie removal, and is rendered after client mount.
+- [x] Completed gap: external Google Maps and YouTube embeds are not loaded unless consent is accepted; the map is also gated until acceptance.
+- [x] Completed gap: homepage counters and pricing cards now format numbers using the active locale.
+- [x] Existing API and fallback content remains localized where supplied by locale-specific API fields or `localizedSeedCopy`; no API changes were made.
+
+### Verification and manual QA
+
+- [x] `pnpm --filter web lint`, `pnpm --filter web typecheck`, `pnpm --filter web test` (37 tests), `pnpm --filter web build`, and `pnpm check:i18n` all passed; the catalogs contain 969 matching keys.
+- [x] Locale switching from mobile and desktop selectors updates `<html lang>`, persists through refresh, and retains the active selection.
+- [x] Fresh-visit consent, Accept, Reject, persistence after reload, reappearance after clearing the cookie, and keyboard-visible focus on both banner buttons were checked in the browser.
+- [x] The contact map was absent with no consent, loaded after Accept, persisted after refresh, and stopped loading after the consent cookie was cleared or rejected.
+- [x] Eleven public/auth/legal/blog/contact routes were checked at 360, 768, and 1280 px in both locales: 66 route/viewport checks with no document overflow.
+- [x] Responsive browser tests passed for all four seeded roles and the public mobile menu. The member route sweep and inactive-member detail test passed on isolated retries after the initial full run hit the API auth rate limit; TRAINER, ADMIN, SPONSOR, public responsive, and mobile-navigation tests passed in the initial run.
+- [x] Contact keyboard focus and inline validation were rechecked at 360 px. The earlier Phase 2 browser verification of blog filters/detail, contact validation, mocked success, and API error feedback remains applicable; those surfaces were not changed in this phase.
+
+### Limitations and follow-up
+
+- The API does not provide translated nutrition meal-plan content for each locale. That API-owned content remains unchanged.
+- The blog remains local fallback content and contact submission remains unavailable until their respective API contracts exist; these Phase 2 limitations are unchanged.
+- This task's new browser sweep covers public routes in both locales and authenticated dashboard responsiveness in the seeded-role E2E checks. Full visual review of themes, reduced motion, physical-device touch/safe-area behavior, and every mutation remains a separate manual review.
+- The initial all-at-once E2E run encountered a transient API 429 in the inactive-member case and a cookie-banner interception in the member case. The banner test helper was made hydration-safe; the affected tests passed individually after restarting the local API.

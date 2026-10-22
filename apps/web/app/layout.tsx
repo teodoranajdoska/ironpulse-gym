@@ -11,6 +11,7 @@ import { MotionRuntime } from '@/components/motion-runtime';
 import { SiteFooter } from '@/components/site-footer';
 import { CookieBanner } from '@/components/cookie-banner';
 import { PageTransition } from '@/components/page-transition';
+import { ToastProvider } from '@/components/ui/toast';
 
 const displayFont = Oswald({
   subsets: ['latin', 'cyrillic'],
@@ -30,24 +31,33 @@ export async function generateMetadata() {
     title: APP_NAME,
     description: t('subtitle'),
   };
-};
+}
 
-export default async function RootLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
+export default async function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}): Promise<JSX.Element> {
   const messages = await getMessages();
   const locale = await getLocale();
   const nav = await getTranslations('nav');
+  const feedback = await getTranslations('feedback');
 
   return (
     <html data-theme="dark" lang={locale}>
       <body className={`${displayFont.variable} ${sansFont.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
-            <a className="skip-link" href="#main-content">{nav('skipToContent')}</a>
-            <SiteNavbar />
-            <PageTransition>{children}</PageTransition>
-            <SiteFooter />
-            <CookieBanner />
-            <MotionRuntime />
+            <ToastProvider dismissLabel={feedback('dismiss')}>
+              <a className="skip-link" href="#main-content">
+                {nav('skipToContent')}
+              </a>
+              <SiteNavbar />
+              <PageTransition>{children}</PageTransition>
+              <SiteFooter />
+              <CookieBanner />
+              <MotionRuntime />
+            </ToastProvider>
           </AuthProvider>
         </NextIntlClientProvider>
       </body>

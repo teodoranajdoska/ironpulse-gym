@@ -136,3 +136,11 @@ The backup script writes to `../ironpulse-backups/`, which is outside the reposi
 - Latest validation: `pnpm lint`, `pnpm typecheck`, `pnpm test` (79 tests), `pnpm build`, and `pnpm check:i18n` (876 matching keys) pass. `pnpm test:e2e` passes all 6 Chromium tests across the 4 seeded roles and public site.
 - Full manual visual testing across locale/theme/reduced-motion, real device touch/safe-area, every mutation/validation branch, and destructive action remains outstanding. Seed machine video IDs still read `TODO-replace`; they are not real videos and will show the unavailable state until reviewed IDs are supplied.
 - Current development browser/API used ports 3002/4001. A pre-existing API process on port 4000 was left untouched. For normal fresh-checkout walkthroughs see [README Phase 4C audit and manual role walkthrough](../README.md#phase-4c-audit-and-manual-role-walkthrough); run `pnpm db:reset` only when it is safe to replace the local database with seed data.
+
+## Phase 3 presentation audit follow-up
+
+- The existing `next-intl` App Router setup, `mk`/`en` catalogs, locale persistence, translated application UI, and responsive navigation were retained. Current catalogs have 969 matching keys; do not duplicate or replace this setup.
+- Consent is stored in the `user_consent` cookie as `accepted` or `rejected` for one year. The client-rendered banner supports both choices, and external map/video embeds are gated on accepted consent. No analytics or advertising scripts are present.
+- Homepage counts and public membership prices use the active locale for number formatting.
+- The 2026-10-22 Phase 3 checks passed web lint, typecheck, Vitest (37), production build, and i18n parity. Public routes had no page-level overflow at 360/768/1280 in both locales; responsive role checks covered all four seeded roles. See the Phase 3 entry in [PROGRESS.md](../PROGRESS.md) for the detailed audit and test results.
+- Known limitations remain unchanged: nutrition meal-plan content is API-owned and not translated per locale, blog posts use local fallback data, and contact submission lacks an API endpoint. Production external-embed behavior and complete physical-device/theme/reduced-motion visual review remain follow-ups.

@@ -9,7 +9,7 @@ import { Reveal } from '@/components/sections/reveal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Section, SectionHeading } from '@/components/sections';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 const plansResponseSchema = z.object({
   data: z.array(z.object({
@@ -23,6 +23,7 @@ const plansResponseSchema = z.object({
 type Plan = z.infer<typeof plansResponseSchema>['data'][number];
 
 export function PricingPreview(): JSX.Element {
+  const locale = useLocale();
   const t = useTranslations('home');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +74,7 @@ export function PricingPreview(): JSX.Element {
               <PricingCard
                 cta={t('choosePlan')}
                 duration={durationLabel(plan.durationMonths)}
+                locale={locale}
                 name={t('planName', { duration: durationLabel(plan.durationMonths) })}
                 popular={false}
                 popularLabel={t('popular')}

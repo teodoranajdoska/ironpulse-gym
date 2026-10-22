@@ -6,6 +6,7 @@ export function PricingCard({
   name,
   duration,
   price,
+  locale,
   popular = false,
   popularLabel,
   cta,
@@ -13,6 +14,7 @@ export function PricingCard({
   name: string;
   duration: string;
   price: number;
+  locale: string;
   popular?: boolean;
   popularLabel: string;
   cta: string;
@@ -23,7 +25,7 @@ export function PricingCard({
       <p className="text-sm text-muted">{duration}</p>
       <h3 className="mt-2 text-xl font-semibold text-foreground">{name}</h3>
       <p className="mt-8 display-font text-4xl font-bold tracking-tightest text-foreground">
-        {new Intl.NumberFormat('mk-MK').format(price)}
+        {new Intl.NumberFormat(locale === 'mk' ? 'mk-MK' : 'en-GB').format(price)}
         <span className="ml-2 font-sans text-xs font-medium tracking-normal text-muted"> MKD</span>
       </p>
       <Button asChild className="mt-8 w-full" variant={popular ? 'default' : 'outline'}>
