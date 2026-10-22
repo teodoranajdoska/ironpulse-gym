@@ -8,6 +8,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { Env } from '../src/config/env';
 import { AuthService } from '../src/auth/auth.service';
 import { MailService } from '../src/auth/mail.service';
+import { DemoSeedService } from '../src/auth/demo-seed.service';
 import { RolesGuard } from '../src/auth/roles.guard';
 
 const activeUser = {
@@ -78,13 +79,17 @@ function dependencies(emailVerificationRequired = false) {
     sendPasswordReset: jest.fn(async (_email: string, _locale: string, _token: string) => undefined),
     sendInvitation: jest.fn(async (_email: string, _locale: string, _token: string) => undefined),
   };
+  const demoSeedMocks = {
+    seedForLogin: jest.fn(async (_email: string, _password: string) => undefined),
+  };
   const service = new AuthService(
     prismaMocks as unknown as PrismaService,
     jwtMocks as unknown as JwtService,
     configMocks as unknown as ConfigService<Env, true>,
     mailMocks as unknown as MailService,
+    demoSeedMocks as unknown as DemoSeedService,
   );
-  return { service, prismaMocks, jwtMocks, mailMocks, transaction };
+  return { service, prismaMocks, jwtMocks, mailMocks, demoSeedMocks, transaction };
 }
 
 describe('AuthService', () => {
@@ -136,6 +141,23 @@ describe('AuthService', () => {
       service.login({ email: 'unknown@example.com', password: 'password123' }, {}),
     ).rejects.toThrow(new UnauthorizedException('Invalid email or password.'));
     expect(jwtMocks.signAsync).not.toHaveBeenCalled();
+  });
+
+  test('normalizes login email before demo seeding and user lookup', async () => {
+    const { service, prismaMocks, demoSeedMocks } = dependencies();
+    prismaMocks.user.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.login({ email: '  UNKNOWN@example.com ', password: 'password123' }, {}),
+    ).rejects.toThrow(UnauthorizedException);
+
+    expect(demoSeedMocks.seedForLogin).toHaveBeenCalledWith(
+      'unknown@example.com',
+      'password123',
+    );
+    expect(prismaMocks.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { email: 'unknown@example.com' } }),
+    );
   });
 
   test('login rejects unverified users', async () => {

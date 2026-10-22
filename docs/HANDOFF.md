@@ -144,3 +144,10 @@ The backup script writes to `../ironpulse-backups/`, which is outside the reposi
 - Homepage counts and public membership prices use the active locale for number formatting.
 - The 2026-10-22 Phase 3 checks passed web lint, typecheck, Vitest (37), production build, and i18n parity. Public routes had no page-level overflow at 360/768/1280 in both locales; responsive role checks covered all four seeded roles. See the Phase 3 entry in [PROGRESS.md](../PROGRESS.md) for the detailed audit and test results.
 - Known limitations remain unchanged: nutrition meal-plan content is API-owned and not translated per locale, blog posts use local fallback data, and contact submission lacks an API endpoint. Production external-embed behavior and complete physical-device/theme/reduced-motion visual review remain follow-ups.
+
+## Phase 4D: demo login provisioning
+
+- On a fresh demo deployment, login can provision only the five registered accounts (`admin@ironpulse.test`, `member@ironpulse.test`, `member2@ironpulse.test`, `trainer@ironpulse.test`, and `sponsor@ironpulse.test`) when their submitted password is `password123`.
+- Enable this explicitly with `AUTO_SEED_DEMO_USERS=true` in the API environment. It defaults to `false`; enabling it in production is supported for demo deployments and logs a startup warning. Do not enable it for a general production deployment.
+- Provisioning creates just the requested user and its required role profile atomically. Existing accounts are not overwritten, and unknown `@ironpulse.test` addresses are never created.
+- API verification passed: lint, typecheck, build, and all 55 tests. A fresh migrated SQLite database was tested through the running API; all five logins and their role-protected endpoints returned HTTP 200. Details are recorded in [PROGRESS.md](../PROGRESS.md).

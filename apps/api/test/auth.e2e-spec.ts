@@ -9,6 +9,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { AuthController } from '../src/auth/auth.controller';
 import { AuthService } from '../src/auth/auth.service';
 import { MailService } from '../src/auth/mail.service';
+import { DemoSeedService } from '../src/auth/demo-seed.service';
 import { Env } from '../src/config/env';
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
@@ -134,6 +135,7 @@ describe('Auth lifecycle (SQLite)', () => {
       app.get(JwtService),
       optionalConfig,
       app.get(MailService),
+      app.get(DemoSeedService),
     );
     const optionalModule = await Test.createTestingModule({
       controllers: [AuthController],

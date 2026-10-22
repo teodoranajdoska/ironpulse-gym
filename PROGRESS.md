@@ -335,3 +335,28 @@ The Playwright run used `http://localhost:3002` and the current API on port 4001
 - The blog remains local fallback content and contact submission remains unavailable until their respective API contracts exist; these Phase 2 limitations are unchanged.
 - This task's new browser sweep covers public routes in both locales and authenticated dashboard responsiveness in the seeded-role E2E checks. Full visual review of themes, reduced motion, physical-device touch/safe-area behavior, and every mutation remains a separate manual review.
 - The initial all-at-once E2E run encountered a transient API 429 in the inactive-member case and a cookie-banner interception in the member case. The banner test helper was made hydration-safe; the affected tests passed individually after restarting the local API.
+
+## Phase 4D: demo account login provisioning
+
+### Audit checklist
+
+- [x] Existing and retained: Auth controller contract, Argon2 registration/login behavior, Prisma user/role schema, existing role-specific seed records, and validated `ConfigService` environment pattern.
+- [x] Existing and retained: Full production-guarded development seed and normal auth/session issuance; no schema change or edit to the bulk seed was needed.
+- [x] Added: Typed just-in-time demo registry for `admin@ironpulse.test`, `member@ironpulse.test`, `member2@ironpulse.test`, `trainer@ironpulse.test`, and `sponsor@ironpulse.test`.
+- [x] Added: Login-only provisioning behind `AUTO_SEED_DEMO_USERS`, with matching-password gate, one-account Prisma transaction, unique-conflict recovery, and role-specific profile creation.
+- [x] Added: Focused tests for role/session shape, profile data, hash validity, repeat/concurrent logins, unknown accounts, wrong passwords, and the disabled flag.
+
+### Verification
+
+- [x] API lint, source/seed typecheck, and production build passed.
+- [x] `pnpm --filter api test` passed: 12 suites / 55 tests.
+- [x] Fresh isolated SQLite database was migrated without seeding. Each of the five registry accounts then logged in through the running API with HTTP 200 and reached its role-protected endpoint with HTTP 200: `/admin/dashboard`, `/memberships/me` (both members), `/trainers/me/clients`, and `/sponsors/me`.
+- [x] The fresh database contained exactly five demo users; all had the expected role and generic profile, trainer and sponsor profiles were present where required, and Argon2 verification accepted the demo password.
+- [x] Production-configured API startup with the flag enabled returned HTTP 200 from `/health` and emitted one startup warning that demo credentials are intended only for demo deployments.
+- [x] No Prisma schema/migration changes; `apps/web` has no changes.
+
+### Safety notes
+
+- `AUTO_SEED_DEMO_USERS` defaults to `false`; setting it to `true` enables on-demand provisioning in any environment, including production. Production startup emits a warning.
+- Provisioning is limited to the five explicitly listed registry emails, and only when the submitted password exactly matches `password123`. Unknown `@ironpulse.test` emails and wrong-password attempts do not create users.
+- The pre-existing bulk seed remains untouched; this feature provisions one requested account at a time and is intended for demo deployments only, not general production account bootstrap.

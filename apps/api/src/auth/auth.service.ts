@@ -16,6 +16,7 @@ import {
 import { Env } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from './mail.service';
+import { DemoSeedService } from './demo-seed.service';
 
 const ACCESS_COOKIE = 'ip_access';
 const REFRESH_COOKIE = 'ip_refresh';
@@ -54,6 +55,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService<Env, true>,
     private readonly mail: MailService,
+    private readonly demoSeed: DemoSeedService,
   ) {}
 
   async register(
@@ -155,8 +157,10 @@ export class AuthService {
   }
 
   async login(input: LoginInput, meta: ClientMeta): Promise<AuthSession> {
+    const email = input.email.trim().toLowerCase();
+    await this.demoSeed.seedForLogin(email, input.password);
     const user = await this.prisma.user.findUnique({
-      where: { email: input.email.toLowerCase() },
+      where: { email },
       include: { profile: { select: { name: true } } },
     });
     if (!user) {

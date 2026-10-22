@@ -9,12 +9,14 @@ import { RolesGuard } from './roles.guard';
 import { CsrfGuard } from './csrf.guard';
 import { MailService } from './mail.service';
 import { DevMailController } from './dev-mail.controller';
+import { DemoSeedService } from './demo-seed.service';
 
 @Module({
   imports: [UsersModule, JwtModule.register({})],
   controllers: [AuthController, DevMailController],
   providers: [
     AuthService,
+    DemoSeedService,
     MailService,
     JwtAuthGuard,
     RolesGuard,
